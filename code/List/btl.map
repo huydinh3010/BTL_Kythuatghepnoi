@@ -1,0 +1,49 @@
+RAM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+recv_buf                                                                          0x0300      20
+_seed                                                                             0x0314       4
+
+EEPROM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+
+Register Allocation
+Variable                                                                          Register  Size
+------------------------------------------------------------------------------------------------
+recv_buf_ind                                                                      R5           1
+recv_done                                                                         R4           1
+
+FLASH Allocation [words]
+Function                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+ADC_init                                                                          0x000A3     11
+ADC_read                                                                          0x000AE     33
+USART_init                                                                        0x000CF     16
+USART_put                                                                         0x000DF     46
+USART_receive_isr                                                                 0x0010D     44
+LCD_action                                                                        0x00139     37
+LCD_init                                                                          0x0015E     23
+LCD_clear                                                                         0x00175      9
+LCD_print                                                                         0x0017E     64
+LCD_print_pos                                                                     0x001BE     30
+read_dht11                                                                        0x001DC    147
+main                                                                              0x0026F    419
+put_buff_G100                                                                     0x00412     64
+_ftoe_G100                                                                        0x00452    355
+_print_G100                                                                       0x005B5    749
+sprintf                                                                           0x008A2     60
+get_buff_G100                                                                     0x008DE     44
+_scanf_G100                                                                       0x0090A    428
+sscanf                                                                            0x00AB6     51
+memset                                                                            0x00AE9     16
+strcpyf                                                                           0x00AF9     13
+strlen                                                                            0x00B06     12
+strlenf                                                                           0x00B12     13
+strrchr                                                                           0x00B1F     14
+isdigit                                                                           0x00B2D      9
+isspace                                                                           0x00B36     11
+isxdigit                                                                          0x00B41     15
+ftrunc                                                                            0x00B50     49
+floor                                                                             0x00B81     23
+ftoa                                                                              0x00B98    296

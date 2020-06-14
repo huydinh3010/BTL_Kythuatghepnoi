@@ -1,0 +1,271 @@
+#include <mega328p.h>
+#include <delay.h>
+#include <stdio.h>
+#include <eeprom.h>
+#include <string.h>
+#define BAUD 9600
+#define SYS_CLOCK 11059200
+#define DHT11_PORT PORTB
+#define DHT11_DDR DDRB
+#define DHT11_PIN PINB
+#define DHT11_INPUTPIN 1
+#define DHT11_TIMEOUT 200
+#define V_REF 5.0
+#define LCD_PORT PORTD
+#define LCD_DPIN DDRD
+#define LCD_RSPIN 2
+#define LCD_ENPIN 3
+
+char recv_buf[20];
+char recv_buf_ind = 0;
+char recv_done = 0;
+
+void ADC_init(){
+    // select Vref = AVcc     
+    ADMUX |= (1<<REFS0);   
+//    // Left adjust ADC result to allow easy 8 bit reading
+//    ADMUX |= (1 << ADLAR);                                 
+    // set prescaler to 64 and enable ADC 
+    ADCSRA |= (1<<ADPS2) | (1<<ADPS1) | (1<<ADPS0)| (1 << ADEN);
+}
+
+unsigned int ADC_read(unsigned char ADCchannel){
+    //select ADC channel with safety mask      
+    ADMUX = (ADMUX & 0xF0) | (ADCchannel & 0x0F);
+    //single conversion mode
+    ADCSRA |= (1<<ADSC);
+    // wait until ADC conversion is complete
+    while( ADCSRA & (1<<ADSC));
+    return ADCL + (ADCH & 0x03) * 256;
+}
+
+void USART_init(unsigned int ubrr){
+	// set baud rate
+	UBRR0H = (unsigned char)(ubrr >> 8);
+	UBRR0L = (unsigned char)ubrr;
+	// enable receiver and transmitter, receive interrupt
+	UCSR0B = 0x98;
+	// set frame format: 8 bit data, 1 stop bit
+	UCSR0C = 0x06;
+}
+
+void USART_put(unsigned char * buf){
+    int i = 0;
+    while(buf[i] != 0){
+        while(!(UCSR0A & (1 << UDRE0))); // wait for empty transmit buffer     
+        UDR0 = buf[i];
+        i++;
+    }  
+    // sending '\n' '\r'
+    while(!(UCSR0A & (1 << UDRE0)));
+    UDR0 = '\n';
+    while(!(UCSR0A & (1 << UDRE0)));
+    UDR0 = '\r';
+}
+
+interrupt [USART_RXC] void USART_receive_isr (void){
+    recv_buf_ind = (recv_buf_ind + 1) % 20;
+    recv_buf[recv_buf_ind] = UDR0;
+    if(recv_buf[recv_buf_ind] == 'e') recv_done = 1;
+}
+
+void LCD_action(unsigned char cmnd){   
+    // 4 bit mode
+    LCD_PORT = (LCD_PORT & 0x0F) | (cmnd & 0xF0); // send upper nibble
+    LCD_PORT &= ~(1 << LCD_RSPIN); // RS = 0
+    LCD_PORT |= (1 << LCD_ENPIN); // EN = 1
+    delay_us(1);
+    LCD_PORT &= ~(1 << LCD_ENPIN); // EN = 0
+    delay_us(200);
+    LCD_PORT = (LCD_PORT & 0x0F) | (cmnd << 4); // send lower nibble
+    LCD_PORT |= (1 << LCD_ENPIN); // EN = 1 
+    delay_us(1);
+    LCD_PORT &= ~(1 << LCD_ENPIN); // EN = 0
+    delay_ms(2);
+}
+
+void LCD_init(void){
+    LCD_DPIN = 0xFF;
+    delay_ms(20); // wait before LCD activation
+    LCD_action(0x02); // 4 bit control
+    LCD_action(0x28); // initialization of 16X2 LCD in 4bit mode
+    LCD_action(0x0C); // disable cursor
+    LCD_action(0x06); // auto increment cursor 
+    LCD_action(0x01); // clear LCD
+    LCD_action(0x80); // cursor at home position
+    delay_ms(2);
+}
+
+
+void LCD_clear(void){
+    LCD_action(0x01); // clear LCD
+    delay_ms(2);
+    LCD_action(0x80); // move to line 1, position 1
+}
+
+void LCD_print(char *str){
+    int i;
+	for(i=0; str[i]!=0; i++)
+	{
+		LCD_PORT = (LCD_PORT & 0x0F) | (str[i] & 0xF0);
+		LCD_PORT |= (1<<LCD_RSPIN); // RS = 1, data reg 
+		LCD_PORT |= (1<<LCD_ENPIN); // EN = 1 
+		delay_us(1);
+		LCD_PORT &= ~ (1<<LCD_ENPIN); // EN = 0
+		delay_us(200);
+		LCD_PORT = (LCD_PORT & 0x0F) | (str[i] << 4);
+		LCD_PORT |= (1<<LCD_ENPIN);
+		delay_us(1);
+		LCD_PORT &= ~ (1<<LCD_ENPIN);
+		delay_ms(2);
+	}
+}
+
+void LCD_print_pos(char row, char pos, char *str){
+    if(row == 0 && pos < 16) // line 1
+        LCD_action((pos & 0x0F)|0x80);
+    else if(row == 1 && pos < 16) // line 2
+        LCD_action((pos & 0x0F)|0xC0);
+    LCD_print(str);
+}
+
+int read_dht11(int* temp, int* humidity){
+    unsigned char i, j, bytes[5], time_count;
+    //reset port
+    DHT11_DDR |= (1<<DHT11_INPUTPIN); //output mode
+    DHT11_PORT |= (1<<DHT11_INPUTPIN); // high
+    delay_ms(100);
+	// send start signal  
+	DHT11_PORT &= ~(1<<DHT11_INPUTPIN); // low
+	delay_ms(18);
+	DHT11_PORT |= (1<<DHT11_INPUTPIN); // high
+	DHT11_DDR &= ~(1<<DHT11_INPUTPIN); //input mode
+	delay_us(40);
+    // check DHT response signal
+    if((DHT11_PIN & (1 << DHT11_INPUTPIN))){
+        // error
+        return -1;
+    }
+    delay_us(80);
+    // check DHT pulls up
+    if(!(DHT11_PIN & (1 << DHT11_INPUTPIN))){
+        // error
+        return -2;
+    }
+    delay_us(80);
+    // read 5 bytes
+    for(i = 0; i < 5; i++){
+        unsigned char result = 0;
+        for(j = 0; j < 8; j++){  
+            time_count = 0;
+            // wait for a high voltage
+            while(!(DHT11_PIN & (1 << DHT11_INPUTPIN))){
+                time_count++;
+                if(time_count > DHT11_TIMEOUT) return -3; // timeout error
+                delay_us(1);
+            }
+            delay_us(30);
+            if(DHT11_PIN & (1 << DHT11_INPUTPIN)) // high after 30 us -> bit 1
+                result |= (1<<(7-j));
+            time_count = 0;     
+            // wait until get low
+            while(DHT11_PIN & (1 << DHT11_INPUTPIN)){
+                time_count++;
+                if(time_count > DHT11_TIMEOUT) return -3; // timeout error
+                delay_us(1); 
+            } 
+        }
+        bytes[i] = result;
+    } 
+    // reset port
+    DHT11_DDR |= (1<<DHT11_INPUTPIN); //output mode
+    DHT11_PORT |= (1<<DHT11_INPUTPIN); // high
+    delay_ms(100);
+    // checksum
+    if((unsigned char)(bytes[0] + bytes[1] + bytes[2] + bytes[3]) == bytes[4]){  
+        *temp = bytes[2];
+//        *temp = *temp << 8;
+//        *temp = *temp | bytes[3];
+        *humidity = bytes[0];
+//        *humidity = *humidity << 8;
+//        *humidity = *humidity | bytes[1];
+        return 0;
+    }            
+    // checksum error
+    return -4;
+}
+
+void main(void){
+    int temp, humidity, err_code, light, temp_threshold = -1, humidity_threshold = -1, light_threshold = -1;
+    char i, j, recv_data[20], loop_count = 0, *p;
+    char mss[24];
+    #asm("sei ");        
+    // ADC init - ADC6
+    ADC_init();
+	USART_init(SYS_CLOCK/16/BAUD - 1);
+    LCD_init();
+    // init led pin
+    DDRB |= 0x1C; // 2,3,4
+    temp_threshold = eeprom_read_word(0);
+    humidity_threshold = eeprom_read_word(2);
+    light_threshold = eeprom_read_word(4);
+    //USART_put("Hello from ATmega328p"); 
+	while(1){               
+        // check uart data received 
+        loop_count++;
+        if(recv_done){
+            recv_done = 0;
+            for(i = 0; i < 20; i++) // find 's';
+                if(recv_buf[i] == 's') break;
+            if(i != 20){
+                j = (i + 1) % 20;
+                memset(recv_data, 0, 20);
+                while(j != i){
+                    if(recv_buf[j] == 'e') break;
+                    recv_data[(j-i+20)%20-1] = recv_buf[j];
+                    j = (j+1) % 20;
+                }
+                if(j != i){ 
+                    i = 0;
+                    p = strrchr(recv_data, ' ');
+                    sscanf(p + 1, "%d", &light_threshold);
+                    *p = 0;    
+                    p = strrchr(recv_data, ' ');
+                    sscanf(p + 1, "%d", &humidity_threshold);
+                    *p = 0;
+                    p = strrchr(recv_data, ' ');
+                    sscanf(p + 1, "%d", &temp_threshold);
+                    // eeprom  write
+                    eeprom_write_word(0, temp_threshold);
+                    eeprom_write_word(2, humidity_threshold);
+                    eeprom_write_word(4, light_threshold);  
+                }
+            }
+        }
+        
+        light = ADC_read(6);
+        if(loop_count >= 10){ // read rht11 sensor after every 1s
+            loop_count = 0;                    
+            if((err_code = read_dht11(&temp, &humidity)) == 0){ 
+                sprintf(mss, "0 %d %d %d", temp, humidity, light);
+                USART_put(mss);
+            } else{
+                sprintf(mss, "-1 %d", err_code);
+                USART_put(mss);
+            }
+        }
+        // LCD update
+        LCD_clear();
+        sprintf(mss, "T:%doC, H:%d%%", temp, humidity);
+        LCD_print(mss);
+        sprintf(mss, "L:%4.2f%%", light*100.0/1024);
+        LCD_print_pos(1, 0, mss);
+       
+        // check threshold 
+        PORTB.2 = temp_threshold < temp;
+        PORTB.3 = humidity_threshold < humidity;
+        PORTB.4 = light_threshold > light;
+        
+		delay_ms(100);
+	}
+}
