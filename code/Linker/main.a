@@ -985,19 +985,20 @@
 ; 0000 00F4         }
 ;PCODE: $000002AA VOL: 0
 ; 0000 00F5 
-; 0000 00F6         light = ADC_read(6);
+; 0000 00F6 
+; 0000 00F7         if(loop_count >= 10){ // read rht11 sensor after every 1s
 ;PCODE: $000002AB VOL: 0
 ;PCODE: $000002AC VOL: 0
 ;PCODE: $000002AD VOL: 0
 ;PCODE: $000002AE VOL: 0
-; 0000 00F7         if(loop_count >= 10){ // read rht11 sensor after every 1s
+; 0000 00F8             loop_count = 0;
 ;PCODE: $000002AF VOL: 0
 ;PCODE: $000002B0 VOL: 0
+; 0000 00F9             light = ADC_read(6);
 ;PCODE: $000002B1 VOL: 0
-; 0000 00F8             loop_count = 0;
 ;PCODE: $000002B2 VOL: 0
 ;PCODE: $000002B3 VOL: 0
-; 0000 00F9             if((err_code = read_dht11(&temp, &humidity)) == 0){
+; 0000 00FA             if((err_code = read_dht11(&temp, &humidity)) == 0){
 ;PCODE: $000002B4 VOL: 0
 ;PCODE: $000002B5 VOL: 0
 ;PCODE: $000002B6 VOL: 0
@@ -1015,7 +1016,7 @@
 ;PCODE: $000002C2 VOL: 0
 ;PCODE: $000002C3 VOL: 0
 ;PCODE: $000002C4 VOL: 0
-; 0000 00FA                 sprintf(mss, "0 %d %d %d", temp, humidity, light);
+; 0000 00FB                 sprintf(mss, "0 %d %d %d", temp, humidity, light);
 ;PCODE: $000002C5 VOL: 0
 ;PCODE: $000002C6 VOL: 0
 ;PCODE: $000002C7 VOL: 0
@@ -1034,13 +1035,14 @@
 ;PCODE: $000002D4 VOL: 0
 ;PCODE: $000002D5 VOL: 0
 ;PCODE: $000002D6 VOL: 0
-; 0000 00FB                 USART_put(mss);
+; 0000 00FC                 USART_put(mss);
 ;PCODE: $000002D7 VOL: 0
 ;PCODE: $000002D8 VOL: 0
-; 0000 00FC             } else{
+; 0000 00FD                 // LCD update
+; 0000 00FE                 LCD_clear();
 ;PCODE: $000002D9 VOL: 0
+; 0000 00FF                 sprintf(mss, "T:%doC, H:%d%%", temp, humidity);
 ;PCODE: $000002DA VOL: 0
-; 0000 00FD                 sprintf(mss, "-1 %d", err_code);
 ;PCODE: $000002DB VOL: 0
 ;PCODE: $000002DC VOL: 0
 ;PCODE: $000002DD VOL: 0
@@ -1053,17 +1055,13 @@
 ;PCODE: $000002E4 VOL: 0
 ;PCODE: $000002E5 VOL: 0
 ;PCODE: $000002E6 VOL: 0
-; 0000 00FE                 USART_put(mss);
 ;PCODE: $000002E7 VOL: 0
 ;PCODE: $000002E8 VOL: 0
-; 0000 00FF             }
+; 0000 0100                 LCD_print(mss);
 ;PCODE: $000002E9 VOL: 0
-; 0000 0100         }
-; 0000 0101         // LCD update
-; 0000 0102         LCD_clear();
 ;PCODE: $000002EA VOL: 0
+; 0000 0101                 sprintf(mss, "L:%4.2f%%", light*100.0/1024);
 ;PCODE: $000002EB VOL: 0
-; 0000 0103         sprintf(mss, "T:%doC, H:%d%%", temp, humidity);
 ;PCODE: $000002EC VOL: 0
 ;PCODE: $000002ED VOL: 0
 ;PCODE: $000002EE VOL: 0
@@ -1079,17 +1077,19 @@
 ;PCODE: $000002F8 VOL: 0
 ;PCODE: $000002F9 VOL: 0
 ;PCODE: $000002FA VOL: 0
-; 0000 0104         LCD_print(mss);
 ;PCODE: $000002FB VOL: 0
+; 0000 0102                 LCD_print_pos(1, 0, mss);
 ;PCODE: $000002FC VOL: 0
-; 0000 0105         sprintf(mss, "L:%4.2f%%", light*100.0/1024);
 ;PCODE: $000002FD VOL: 0
 ;PCODE: $000002FE VOL: 0
 ;PCODE: $000002FF VOL: 0
 ;PCODE: $00000300 VOL: 0
 ;PCODE: $00000301 VOL: 0
+; 0000 0103 
+; 0000 0104             } else{
 ;PCODE: $00000302 VOL: 0
 ;PCODE: $00000303 VOL: 0
+; 0000 0105                 sprintf(mss, "-1 %d", err_code);
 ;PCODE: $00000304 VOL: 0
 ;PCODE: $00000305 VOL: 0
 ;PCODE: $00000306 VOL: 0
@@ -1100,16 +1100,18 @@
 ;PCODE: $0000030B VOL: 0
 ;PCODE: $0000030C VOL: 0
 ;PCODE: $0000030D VOL: 0
-; 0000 0106         LCD_print_pos(1, 0, mss);
 ;PCODE: $0000030E VOL: 0
 ;PCODE: $0000030F VOL: 0
+; 0000 0106                 USART_put(mss);
 ;PCODE: $00000310 VOL: 0
 ;PCODE: $00000311 VOL: 0
+; 0000 0107             }
 ;PCODE: $00000312 VOL: 0
+; 0000 0108         }
+; 0000 0109 
+; 0000 010A         // check threshold
+; 0000 010B         PORTB.2 = temp_threshold < temp;
 ;PCODE: $00000313 VOL: 0
-; 0000 0107 
-; 0000 0108         // check threshold
-; 0000 0109         PORTB.2 = temp_threshold < temp;
 ;PCODE: $00000314 VOL: 0
 ;PCODE: $00000315 VOL: 0
 ;PCODE: $00000316 VOL: 0
@@ -1122,7 +1124,7 @@
 ;PCODE: $0000031D VOL: 0
 ;PCODE: $0000031E VOL: 0
 ;PCODE: $0000031F VOL: 0
-; 0000 010A         PORTB.3 = humidity_threshold < humidity;
+; 0000 010C         PORTB.3 = humidity_threshold < humidity;
 ;PCODE: $00000320 VOL: 0
 ;PCODE: $00000321 VOL: 0
 ;PCODE: $00000322 VOL: 0
@@ -1135,7 +1137,7 @@
 ;PCODE: $00000329 VOL: 0
 ;PCODE: $0000032A VOL: 0
 ;PCODE: $0000032B VOL: 0
-; 0000 010B         PORTB.4 = light_threshold > light;
+; 0000 010D         PORTB.4 = light_threshold > light;
 ;PCODE: $0000032C VOL: 0
 ;PCODE: $0000032D VOL: 0
 ;PCODE: $0000032E VOL: 0
@@ -1148,15 +1150,15 @@
 ;PCODE: $00000335 VOL: 0
 ;PCODE: $00000336 VOL: 0
 ;PCODE: $00000337 VOL: 0
-; 0000 010C 
-; 0000 010D 		delay_ms(100);
+; 0000 010E 
+; 0000 010F 		delay_ms(100);
 ;PCODE: $00000338 VOL: 0
 ;PCODE: $00000339 VOL: 0
 ;PCODE: $0000033A VOL: 0
-; 0000 010E 	}
+; 0000 0110 	}
 ;PCODE: $0000033B VOL: 0
 ;PCODE: $0000033C VOL: 0
-; 0000 010F }
+; 0000 0111 }
 ;PCODE: $0000033D VOL: 0
 ;PCODE: $0000033E VOL: 0
 ;PCODE: $0000033F VOL: 0

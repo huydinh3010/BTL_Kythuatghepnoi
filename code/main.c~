@@ -243,24 +243,25 @@ void main(void){
             }
         }
         
-        light = ADC_read(6);
+        
         if(loop_count >= 10){ // read rht11 sensor after every 1s
             loop_count = 0;                    
             if((err_code = read_dht11(&temp, &humidity)) == 0){ 
                 sprintf(mss, "0 %d %d %d", temp, humidity, light);
                 USART_put(mss);
+                // LCD update
+                LCD_clear();
+                sprintf(mss, "T:%doC, H:%d%%", temp, humidity);
+                LCD_print(mss);
+                sprintf(mss, "L:%4.2f%%", light*100.0/1024);
+                LCD_print_pos(1, 0, mss);
+               
             } else{
                 sprintf(mss, "-1 %d", err_code);
                 USART_put(mss);
             }
         }
-        // LCD update
-//        LCD_clear();
-        sprintf(mss, "T:%doC, H:%d%%", temp, humidity);
-        LCD_print(mss);
-        sprintf(mss, "L:%4.2f%%", light*100.0/1024);
-        LCD_print_pos(1, 0, mss);
-       
+        
         // check threshold 
         PORTB.2 = temp_threshold < temp;
         PORTB.3 = humidity_threshold < humidity;

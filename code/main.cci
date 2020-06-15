@@ -1,9 +1,9 @@
-VERSION:3 SOURCE_TIMESTAMP:50CE952A
-NODE:I LEVEL:0 LINE:1 "C:\Program Files (x86)\CodevisionAVR\inc\mega328p.h"
-NODE:I LEVEL:0 LINE:2 "C:\Program Files (x86)\CodevisionAVR\inc\delay.h"
-NODE:I LEVEL:0 LINE:3 "C:\Program Files (x86)\CodevisionAVR\inc\stdio.h"
-NODE:I LEVEL:0 LINE:4 "C:\Program Files (x86)\CodevisionAVR\inc\eeprom.h"
-NODE:I LEVEL:0 LINE:5 "C:\Program Files (x86)\CodevisionAVR\inc\string.h"
+VERSION:3 SOURCE_TIMESTAMP:50CF3968
+NODE:I LEVEL:0 LINE:1 "C:\cvavr\inc\mega328p.h"
+NODE:I LEVEL:0 LINE:2 "C:\cvavr\inc\delay.h"
+NODE:I LEVEL:0 LINE:3 "C:\cvavr\inc\stdio.h"
+NODE:I LEVEL:0 LINE:4 "C:\cvavr\inc\eeprom.h"
+NODE:I LEVEL:0 LINE:5 "C:\cvavr\inc\string.h"
 NODE:M LEVEL:0 LINE:6 "BAUD"
 NODE:M LEVEL:0 LINE:7 "SYS_CLOCK"
 NODE:M LEVEL:0 LINE:8 "DHT11_PORT"

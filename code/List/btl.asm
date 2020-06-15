@@ -1138,11 +1138,11 @@ _0x2F:
 	.DB  0xFF,0xFF,0xFF,0xFF,0xFF
 _0x0:
 	.DB  0x25,0x64,0x0,0x30,0x20,0x25,0x64,0x20
-	.DB  0x25,0x64,0x20,0x25,0x64,0x0,0x2D,0x31
-	.DB  0x20,0x25,0x64,0x0,0x54,0x3A,0x25,0x64
-	.DB  0x6F,0x43,0x2C,0x20,0x48,0x3A,0x25,0x64
-	.DB  0x25,0x25,0x0,0x4C,0x3A,0x25,0x34,0x2E
-	.DB  0x32,0x66,0x25,0x25,0x0
+	.DB  0x25,0x64,0x20,0x25,0x64,0x0,0x54,0x3A
+	.DB  0x25,0x64,0x6F,0x43,0x2C,0x20,0x48,0x3A
+	.DB  0x25,0x64,0x25,0x25,0x0,0x4C,0x3A,0x25
+	.DB  0x34,0x2E,0x32,0x66,0x25,0x25,0x0,0x2D
+	.DB  0x31,0x20,0x25,0x64,0x0
 _0x2000000:
 	.DB  0x2D,0x4E,0x41,0x4E,0x0
 _0x20A0060:
@@ -2236,13 +2236,9 @@ _0x3D:
 ; 0000 00F4         }
 _0x38:
 ; 0000 00F5 
-; 0000 00F6         light = ADC_read(6);
-_0x33:
-	LDI  R26,LOW(6)
-	RCALL _ADC_read
-	STD  Y+55,R30
-	STD  Y+55+1,R31
+; 0000 00F6 
 ; 0000 00F7         if(loop_count >= 10){ // read rht11 sensor after every 1s
+_0x33:
 	LDD  R26,Y+26
 	CPI  R26,LOW(0xA)
 	BRSH PC+2
@@ -2250,7 +2246,12 @@ _0x33:
 ; 0000 00F8             loop_count = 0;
 	LDI  R30,LOW(0)
 	STD  Y+26,R30
-; 0000 00F9             if((err_code = read_dht11(&temp, &humidity)) == 0){
+; 0000 00F9             light = ADC_read(6);
+	LDI  R26,LOW(6)
+	RCALL _ADC_read
+	STD  Y+55,R30
+	STD  Y+55+1,R31
+; 0000 00FA             if((err_code = read_dht11(&temp, &humidity)) == 0){
 	IN   R30,SPL
 	IN   R31,SPH
 	SBIW R30,1
@@ -2270,8 +2271,9 @@ _0x33:
 	POP  R17
 	MOVW R20,R30
 	SBIW R30,0
-	BRNE _0x3F
-; 0000 00FA                 sprintf(mss, "0 %d %d %d", temp, humidity, light);
+	BREQ PC+2
+	RJMP _0x3F
+; 0000 00FB                 sprintf(mss, "0 %d %d %d", temp, humidity, light);
 	MOVW R30,R28
 	ST   -Y,R31
 	ST   -Y,R30
@@ -2290,38 +2292,17 @@ _0x33:
 	LDI  R24,12
 	CALL _sprintf
 	ADIW R28,16
-; 0000 00FB                 USART_put(mss);
-	RJMP _0x49
-; 0000 00FC             } else{
-_0x3F:
-; 0000 00FD                 sprintf(mss, "-1 %d", err_code);
+; 0000 00FC                 USART_put(mss);
+	MOVW R26,R28
+	RCALL _USART_put
+; 0000 00FD                 // LCD update
+; 0000 00FE                 LCD_clear();
+	RCALL _LCD_clear
+; 0000 00FF                 sprintf(mss, "T:%doC, H:%d%%", temp, humidity);
 	MOVW R30,R28
 	ST   -Y,R31
 	ST   -Y,R30
 	__POINTW1FN _0x0,14
-	ST   -Y,R31
-	ST   -Y,R30
-	MOVW R30,R20
-	CALL __CWD1
-	CALL __PUTPARD1
-	LDI  R24,4
-	CALL _sprintf
-	ADIW R28,8
-; 0000 00FE                 USART_put(mss);
-_0x49:
-	MOVW R26,R28
-	RCALL _USART_put
-; 0000 00FF             }
-; 0000 0100         }
-; 0000 0101         // LCD update
-; 0000 0102         LCD_clear();
-_0x3E:
-	RCALL _LCD_clear
-; 0000 0103         sprintf(mss, "T:%doC, H:%d%%", temp, humidity);
-	MOVW R30,R28
-	ST   -Y,R31
-	ST   -Y,R30
-	__POINTW1FN _0x0,20
 	ST   -Y,R31
 	ST   -Y,R30
 	MOVW R30,R16
@@ -2333,14 +2314,14 @@ _0x3E:
 	LDI  R24,8
 	CALL _sprintf
 	ADIW R28,12
-; 0000 0104         LCD_print(mss);
+; 0000 0100                 LCD_print(mss);
 	MOVW R26,R28
 	RCALL _LCD_print
-; 0000 0105         sprintf(mss, "L:%4.2f%%", light*100.0/1024);
+; 0000 0101                 sprintf(mss, "L:%4.2f%%", light*100.0/1024);
 	MOVW R30,R28
 	ST   -Y,R31
 	ST   -Y,R30
-	__POINTW1FN _0x0,35
+	__POINTW1FN _0x0,29
 	ST   -Y,R31
 	ST   -Y,R30
 	LDD  R30,Y+59
@@ -2357,7 +2338,7 @@ _0x3E:
 	LDI  R24,4
 	CALL _sprintf
 	ADIW R28,8
-; 0000 0106         LCD_print_pos(1, 0, mss);
+; 0000 0102                 LCD_print_pos(1, 0, mss);
 	LDI  R30,LOW(1)
 	ST   -Y,R30
 	LDI  R30,LOW(0)
@@ -2365,9 +2346,33 @@ _0x3E:
 	MOVW R26,R28
 	ADIW R26,2
 	RCALL _LCD_print_pos
-; 0000 0107 
-; 0000 0108         // check threshold
-; 0000 0109         PORTB.2 = temp_threshold < temp;
+; 0000 0103 
+; 0000 0104             } else{
+	RJMP _0x40
+_0x3F:
+; 0000 0105                 sprintf(mss, "-1 %d", err_code);
+	MOVW R30,R28
+	ST   -Y,R31
+	ST   -Y,R30
+	__POINTW1FN _0x0,39
+	ST   -Y,R31
+	ST   -Y,R30
+	MOVW R30,R20
+	CALL __CWD1
+	CALL __PUTPARD1
+	LDI  R24,4
+	CALL _sprintf
+	ADIW R28,8
+; 0000 0106                 USART_put(mss);
+	MOVW R26,R28
+	RCALL _USART_put
+; 0000 0107             }
+_0x40:
+; 0000 0108         }
+; 0000 0109 
+; 0000 010A         // check threshold
+; 0000 010B         PORTB.2 = temp_threshold < temp;
+_0x3E:
 	MOVW R30,R16
 	LDD  R26,Y+53
 	LDD  R27,Y+53+1
@@ -2379,7 +2384,7 @@ _0x3E:
 _0x41:
 	SBI  0x5,2
 _0x42:
-; 0000 010A         PORTB.3 = humidity_threshold < humidity;
+; 0000 010C         PORTB.3 = humidity_threshold < humidity;
 	MOVW R30,R18
 	LDD  R26,Y+51
 	LDD  R27,Y+51+1
@@ -2391,7 +2396,7 @@ _0x42:
 _0x43:
 	SBI  0x5,3
 _0x44:
-; 0000 010B         PORTB.4 = light_threshold > light;
+; 0000 010D         PORTB.4 = light_threshold > light;
 	LDD  R30,Y+55
 	LDD  R31,Y+55+1
 	LDD  R26,Y+49
@@ -2404,14 +2409,14 @@ _0x44:
 _0x45:
 	SBI  0x5,4
 _0x46:
-; 0000 010C 
-; 0000 010D 		delay_ms(100);
+; 0000 010E 
+; 0000 010F 		delay_ms(100);
 	LDI  R26,LOW(100)
 	LDI  R27,0
 	CALL _delay_ms
-; 0000 010E 	}
+; 0000 0110 	}
 	RJMP _0x30
-; 0000 010F }
+; 0000 0111 }
 _0x47:
 	RJMP _0x47
 ; .FEND
