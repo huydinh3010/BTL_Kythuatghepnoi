@@ -244,8 +244,8 @@ void main(void){
         }
         
         
-        if(loop_count >= 10){ // read rht11 sensor after every 1s
-            loop_count = 0;                    
+        if(loop_count % 10 == 0){ // read rht11 sensor after every 1s                    
+            light = ADC_read(6);
             if((err_code = read_dht11(&temp, &humidity)) == 0){ 
                 sprintf(mss, "0 %d %d %d", temp, humidity, light);
                 USART_put(mss);
@@ -260,6 +260,13 @@ void main(void){
                 sprintf(mss, "-1 %d", err_code);
                 USART_put(mss);
             }
+        }
+        
+        if(loop_count >= 55){ // send threshold
+            loop_count = 0;
+            LCD_print(mss);
+            sprintf(mss, "1 %d %d %d", temp_threshold, humidity_threshold, light_threshold);
+            USART_put(mss);
         }
         
         // check threshold 

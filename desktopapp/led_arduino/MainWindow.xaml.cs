@@ -17,6 +17,7 @@ using System.IO.Ports;
 using LiveCharts;
 using LiveCharts.Defaults;
 using LiveCharts.Wpf;
+using System.Globalization;
 
 namespace led_arduino
 {
@@ -125,10 +126,11 @@ namespace led_arduino
 
         private void ON_Click(object sender, RoutedEventArgs e)
         {
-            light_thres = int.Parse(nguong_anh_sang.Text);
+            light_thres = (int)(float.Parse(nguong_anh_sang.Text, CultureInfo.InvariantCulture.NumberFormat) * 1024/100);
             humidity_thres = int.Parse(nguong_do_am.Text);
-            temp_thres = int.Parse(nguong_nhiet_do.Text);
+            temp_thres = int.Parse(nguong_nhiet_do.Text) ;
             string str = "s " + temp_thres + " " + humidity_thres + " " + light_thres + "e";
+            ON.IsEnabled = false;
             Console.Write(str);
             sp.Write(str);
         }
@@ -159,6 +161,20 @@ namespace led_arduino
                     {
                         file.WriteLine(DateTime.Now.ToString("dd/mm/yyyy h:mm:ss tt") + " - Temp: " + temp + "°C, Humidity: " + humidity + "%, Light: " + Math.Round(light * 100.0 / 1024, 2) + "%");   
                     }
+                });
+            }
+            else if(s[0].Trim() == "1")
+            {
+                temp_thres = int.Parse(s[1]);
+                humidity_thres = int.Parse(s[2]);
+                light_thres = int.Parse(s[3]);
+                
+                this.Dispatcher.Invoke(() =>
+                {
+                    ON.IsEnabled = true;
+                    nguong_nhiet_do.Text = temp.ToString();
+                    nguong_do_am.Text = humidity_thres.ToString();
+                    nguong_anh_sang.Text = Math.Round(light_thres * 100.0 / 1024, 2).ToString();
                 });
             }
             Console.Write("Data:");
