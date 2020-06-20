@@ -30,6 +30,8 @@ namespace led_arduino
         SerialPort sp = new SerialPort();
         int temp;
         int humidity;
+        int i_temp;
+        int i_humidity;
         int light;
 
         int temp_thres;
@@ -126,7 +128,7 @@ namespace led_arduino
 
         private void ON_Click(object sender, RoutedEventArgs e)
         {
-            light_thres = (int)(float.Parse(nguong_anh_sang.Text, CultureInfo.InvariantCulture.NumberFormat) * 1024/100);
+            light_thres = int.Parse(nguong_anh_sang.Text);
             humidity_thres = int.Parse(nguong_do_am.Text);
             temp_thres = int.Parse(nguong_nhiet_do.Text) ;
             string str = "s " + temp_thres + " " + humidity_thres + " " + light_thres + "e";
@@ -142,16 +144,18 @@ namespace led_arduino
             if(s[0].Trim() == "0")
             {
                 temp = int.Parse(s[1]);
-                humidity = int.Parse(s[2]);
-                light = int.Parse(s[3]);
+                i_temp = int.Parse(s[2]);
+                humidity = int.Parse(s[3]);
+                i_humidity = int.Parse(s[4]);
+                light = int.Parse(s[5]);
                 this.Dispatcher.Invoke(() =>
                 {
-                    TempValues.Add(new ObservableValue(temp));
-                    HumiValues.Add(new ObservableValue(humidity));
+                    TempValues.Add(new ObservableValue(Math.Round(float.Parse(temp.ToString() + "." + i_temp.ToString()), 1)));
+                    HumiValues.Add(new ObservableValue(Math.Round(float.Parse(humidity.ToString() + "." + i_humidity.ToString()), 1)));
                     LightValues.Add(new ObservableValue(Math.Round(light*100.0/1024, 2)));
                     Labels.Append(DateTime.Now.ToString());
-                    nhiet_do.Text = temp.ToString() + "°C";
-                    do_am.Text = humidity.ToString() + "%";
+                    nhiet_do.Text = temp.ToString() + "." + i_temp.ToString() + "°C";
+                    do_am.Text = humidity.ToString() + "." + i_humidity.ToString() + "%";
                     anh_sang.Text = Math.Round(light * 100.0 / 1024, 2).ToString() + "%";
 
 
@@ -172,9 +176,9 @@ namespace led_arduino
                 this.Dispatcher.Invoke(() =>
                 {
                     ON.IsEnabled = true;
-                    nguong_nhiet_do.Text = temp.ToString();
+                    nguong_nhiet_do.Text = temp_thres.ToString();
                     nguong_do_am.Text = humidity_thres.ToString();
-                    nguong_anh_sang.Text = Math.Round(light_thres * 100.0 / 1024, 2).ToString();
+                    nguong_anh_sang.Text = light_thres.ToString();
                 });
             }
             Console.Write("Data:");

@@ -1137,13 +1137,14 @@ _0x2F:
 	.DB  0x0,0x0,0x0,0x0,0x0,0x0,0x0,0xFF
 	.DB  0xFF,0xFF,0xFF,0xFF,0xFF
 _0x0:
+	.DB  0x31,0x20,0x25,0x64,0x20,0x25,0x64,0x20
 	.DB  0x25,0x64,0x0,0x30,0x20,0x25,0x64,0x20
-	.DB  0x25,0x64,0x20,0x25,0x64,0x0,0x54,0x3A
-	.DB  0x25,0x64,0x6F,0x43,0x2C,0x20,0x48,0x3A
-	.DB  0x25,0x64,0x25,0x25,0x0,0x4C,0x3A,0x25
-	.DB  0x34,0x2E,0x32,0x66,0x25,0x25,0x0,0x2D
-	.DB  0x31,0x20,0x25,0x64,0x0,0x31,0x20,0x25
-	.DB  0x64,0x20,0x25,0x64,0x20,0x25,0x64,0x0
+	.DB  0x25,0x64,0x20,0x25,0x64,0x20,0x25,0x64
+	.DB  0x20,0x25,0x64,0x0,0x54,0x3A,0x25,0x64
+	.DB  0x2E,0x25,0x64,0x6F,0x43,0x20,0x48,0x3A
+	.DB  0x25,0x64,0x2E,0x25,0x64,0x25,0x25,0x0
+	.DB  0x4C,0x3A,0x25,0x34,0x2E,0x32,0x66,0x25
+	.DB  0x25,0x0,0x2D,0x31,0x20,0x25,0x64,0x0
 _0x2000000:
 	.DB  0x2D,0x4E,0x41,0x4E,0x0
 _0x20A0060:
@@ -1251,6 +1252,8 @@ __GLOBAL_INI_END:
 	.ORG 0x300
 
 	.CSEG
+;#define F_CPU 11059200
+;
 ;#include <mega328p.h>
 	#ifndef __SLEEP_DEFINED__
 	#define __SLEEP_DEFINED__
@@ -1274,7 +1277,7 @@ __GLOBAL_INI_END:
 ;#define DHT11_PIN PINB
 ;#define DHT11_INPUTPIN 1
 ;#define DHT11_TIMEOUT 200
-;#define V_REF 5.0
+;#define V_REF 5
 ;#define LCD_PORT PORTD
 ;#define LCD_DPIN DDRD
 ;#define LCD_RSPIN 2
@@ -1285,33 +1288,33 @@ __GLOBAL_INI_END:
 ;char recv_done = 0;
 ;
 ;void ADC_init(){
-; 0000 0017 void ADC_init(){
+; 0000 0019 void ADC_init(){
 
 	.CSEG
 _ADC_init:
 ; .FSTART _ADC_init
-; 0000 0018     // select Vref = AVcc
-; 0000 0019     ADMUX |= (1<<REFS0);
+; 0000 001A     // select Vref = AVcc
+; 0000 001B     ADMUX |= (1<<REFS0);
 	LDS  R30,124
 	ORI  R30,0x40
 	STS  124,R30
-; 0000 001A //    // Left adjust ADC result to allow easy 8 bit reading
-; 0000 001B //    ADMUX |= (1 << ADLAR);
-; 0000 001C     // set prescaler to 64 and enable ADC
-; 0000 001D     ADCSRA |= (1<<ADPS2) | (1<<ADPS1) | (1<<ADPS0)| (1 << ADEN);
+; 0000 001C //    // Left adjust ADC result to allow easy 8 bit reading
+; 0000 001D //    ADMUX |= (1 << ADLAR);
+; 0000 001E     // set prescaler to 64 and enable ADC
+; 0000 001F     ADCSRA |= (1<<ADPS2) | (1<<ADPS1) | (1<<ADPS0)| (1 << ADEN);
 	LDS  R30,122
 	ORI  R30,LOW(0x87)
 	STS  122,R30
-; 0000 001E }
+; 0000 0020 }
 	RET
 ; .FEND
 ;
 ;unsigned int ADC_read(unsigned char ADCchannel){
-; 0000 0020 unsigned int ADC_read(unsigned char ADCchannel){
+; 0000 0022 unsigned int ADC_read(unsigned char ADCchannel){
 _ADC_read:
 ; .FSTART _ADC_read
-; 0000 0021     //select ADC channel with safety mask
-; 0000 0022     ADMUX = (ADMUX & 0xF0) | (ADCchannel & 0x0F);
+; 0000 0023     //select ADC channel with safety mask
+; 0000 0024     ADMUX = (ADMUX & 0xF0) | (ADCchannel & 0x0F);
 	ST   -Y,R26
 ;	ADCchannel -> Y+0
 	LDS  R30,124
@@ -1321,18 +1324,18 @@ _ADC_read:
 	ANDI R30,LOW(0xF)
 	OR   R30,R26
 	STS  124,R30
-; 0000 0023     //single conversion mode
-; 0000 0024     ADCSRA |= (1<<ADSC);
+; 0000 0025     //single conversion mode
+; 0000 0026     ADCSRA |= (1<<ADSC);
 	LDS  R30,122
 	ORI  R30,0x40
 	STS  122,R30
-; 0000 0025     // wait until ADC conversion is complete
-; 0000 0026     while( ADCSRA & (1<<ADSC));
+; 0000 0027     // wait until ADC conversion is complete
+; 0000 0028     while( ADCSRA & (1<<ADSC));
 _0x3:
 	LDS  R30,122
 	ANDI R30,LOW(0x40)
 	BRNE _0x3
-; 0000 0027     return ADCL + (ADCH & 0x03) * 256;
+; 0000 0029     return ADCL + (ADCH & 0x03) * 256;
 	LDS  R30,120
 	LDI  R31,0
 	MOVW R26,R30
@@ -1345,42 +1348,42 @@ _0x3:
 	ADD  R30,R26
 	ADC  R31,R27
 	RJMP _0x20C000C
-; 0000 0028 }
+; 0000 002A }
 ; .FEND
 ;
 ;void USART_init(unsigned int ubrr){
-; 0000 002A void USART_init(unsigned int ubrr){
+; 0000 002C void USART_init(unsigned int ubrr){
 _USART_init:
 ; .FSTART _USART_init
-; 0000 002B 	// set baud rate
-; 0000 002C 	UBRR0H = (unsigned char)(ubrr >> 8);
+; 0000 002D 	// set baud rate
+; 0000 002E 	UBRR0H = (unsigned char)(ubrr >> 8);
 	ST   -Y,R27
 	ST   -Y,R26
 ;	ubrr -> Y+0
 	LDD  R30,Y+1
 	STS  197,R30
-; 0000 002D 	UBRR0L = (unsigned char)ubrr;
+; 0000 002F 	UBRR0L = (unsigned char)ubrr;
 	LD   R30,Y
 	STS  196,R30
-; 0000 002E 	// enable receiver and transmitter, receive interrupt
-; 0000 002F 	UCSR0B = 0x98;
+; 0000 0030 	// enable receiver and transmitter, receive interrupt
+; 0000 0031 	UCSR0B = 0x98;
 	LDI  R30,LOW(152)
 	STS  193,R30
-; 0000 0030 	// set frame format: 8 bit data, 1 stop bit
-; 0000 0031 	UCSR0C = 0x06;
+; 0000 0032 	// set frame format: 8 bit data, 1 stop bit
+; 0000 0033 	UCSR0C = 0x06;
 	LDI  R30,LOW(6)
 	STS  194,R30
-; 0000 0032 }
+; 0000 0034 }
 	ADIW R28,2
 	RET
 ; .FEND
 ;
 ;void USART_put(unsigned char * buf){
-; 0000 0034 void USART_put(unsigned char * buf){
+; 0000 0036 void USART_put(unsigned char * buf){
 _USART_put:
 ; .FSTART _USART_put
-; 0000 0035     int i = 0;
-; 0000 0036     while(buf[i] != 0){
+; 0000 0037     int i = 0;
+; 0000 0038     while(buf[i] != 0){
 	ST   -Y,R27
 	ST   -Y,R26
 	ST   -Y,R17
@@ -1397,12 +1400,12 @@ _0x6:
 	LD   R30,X
 	CPI  R30,0
 	BREQ _0x8
-; 0000 0037         while(!(UCSR0A & (1 << UDRE0))); // wait for empty transmit buffer
+; 0000 0039         while(!(UCSR0A & (1 << UDRE0))); // wait for empty transmit buffer
 _0x9:
 	LDS  R30,192
 	ANDI R30,LOW(0x20)
 	BREQ _0x9
-; 0000 0038         UDR0 = buf[i];
+; 0000 003A         UDR0 = buf[i];
 	MOVW R30,R16
 	LDD  R26,Y+2
 	LDD  R27,Y+2+1
@@ -1410,36 +1413,36 @@ _0x9:
 	ADC  R27,R31
 	LD   R30,X
 	STS  198,R30
-; 0000 0039         i++;
+; 0000 003B         i++;
 	__ADDWRN 16,17,1
-; 0000 003A     }
+; 0000 003C     }
 	RJMP _0x6
 _0x8:
-; 0000 003B     // sending '\n' '\r'
-; 0000 003C     while(!(UCSR0A & (1 << UDRE0)));
+; 0000 003D     // sending '\n' '\r'
+; 0000 003E     while(!(UCSR0A & (1 << UDRE0)));
 _0xC:
 	LDS  R30,192
 	ANDI R30,LOW(0x20)
 	BREQ _0xC
-; 0000 003D     UDR0 = '\n';
+; 0000 003F     UDR0 = '\n';
 	LDI  R30,LOW(10)
 	STS  198,R30
-; 0000 003E     while(!(UCSR0A & (1 << UDRE0)));
+; 0000 0040     while(!(UCSR0A & (1 << UDRE0)));
 _0xF:
 	LDS  R30,192
 	ANDI R30,LOW(0x20)
 	BREQ _0xF
-; 0000 003F     UDR0 = '\r';
+; 0000 0041     UDR0 = '\r';
 	LDI  R30,LOW(13)
 	STS  198,R30
-; 0000 0040 }
+; 0000 0042 }
 	LDD  R17,Y+1
 	LDD  R16,Y+0
 	RJMP _0x20C000B
 ; .FEND
 ;
 ;interrupt [USART_RXC] void USART_receive_isr (void){
-; 0000 0042 interrupt [19] void USART_receive_isr (void){
+; 0000 0044 interrupt [19] void USART_receive_isr (void){
 _USART_receive_isr:
 ; .FSTART _USART_receive_isr
 	ST   -Y,R0
@@ -1451,7 +1454,7 @@ _USART_receive_isr:
 	ST   -Y,R31
 	IN   R30,SREG
 	ST   -Y,R30
-; 0000 0043     recv_buf_ind = (recv_buf_ind + 1) % 20;
+; 0000 0045     recv_buf_ind = (recv_buf_ind + 1) % 20;
 	MOV  R30,R5
 	LDI  R31,0
 	ADIW R30,1
@@ -1460,14 +1463,14 @@ _USART_receive_isr:
 	LDI  R31,HIGH(20)
 	CALL __MODW21
 	MOV  R5,R30
-; 0000 0044     recv_buf[recv_buf_ind] = UDR0;
+; 0000 0046     recv_buf[recv_buf_ind] = UDR0;
 	MOV  R26,R5
 	LDI  R27,0
 	SUBI R26,LOW(-_recv_buf)
 	SBCI R27,HIGH(-_recv_buf)
 	LDS  R30,198
 	ST   X,R30
-; 0000 0045     if(recv_buf[recv_buf_ind] == 'e') recv_done = 1;
+; 0000 0047     if(recv_buf[recv_buf_ind] == 'e') recv_done = 1;
 	MOV  R30,R5
 	LDI  R31,0
 	SUBI R30,LOW(-_recv_buf)
@@ -1477,7 +1480,7 @@ _USART_receive_isr:
 	BRNE _0x12
 	LDI  R30,LOW(1)
 	MOV  R4,R30
-; 0000 0046 }
+; 0000 0048 }
 _0x12:
 	LD   R30,Y+
 	OUT  SREG,R30
@@ -1492,11 +1495,11 @@ _0x12:
 ; .FEND
 ;
 ;void LCD_action(unsigned char cmnd){
-; 0000 0048 void LCD_action(unsigned char cmnd){
+; 0000 004A void LCD_action(unsigned char cmnd){
 _LCD_action:
 ; .FSTART _LCD_action
-; 0000 0049     // 4 bit mode
-; 0000 004A     LCD_PORT = (LCD_PORT & 0x0F) | (cmnd & 0xF0); // send upper nibble
+; 0000 004B     // 4 bit mode
+; 0000 004C     LCD_PORT = (LCD_PORT & 0x0F) | (cmnd & 0xF0); // send upper nibble
 	ST   -Y,R26
 ;	cmnd -> Y+0
 	IN   R30,0xB
@@ -1506,17 +1509,17 @@ _LCD_action:
 	ANDI R30,LOW(0xF0)
 	OR   R30,R26
 	OUT  0xB,R30
-; 0000 004B     LCD_PORT &= ~(1 << LCD_RSPIN); // RS = 0
+; 0000 004D     LCD_PORT &= ~(1 << LCD_RSPIN); // RS = 0
 	CBI  0xB,2
-; 0000 004C     LCD_PORT |= (1 << LCD_ENPIN); // EN = 1
+; 0000 004E     LCD_PORT |= (1 << LCD_ENPIN); // EN = 1
 	SBI  0xB,3
-; 0000 004D     delay_us(1);
+; 0000 004F     delay_us(1);
 	__DELAY_USB 4
-; 0000 004E     LCD_PORT &= ~(1 << LCD_ENPIN); // EN = 0
+; 0000 0050     LCD_PORT &= ~(1 << LCD_ENPIN); // EN = 0
 	CBI  0xB,3
-; 0000 004F     delay_us(200);
+; 0000 0051     delay_us(200);
 	__DELAY_USW 553
-; 0000 0050     LCD_PORT = (LCD_PORT & 0x0F) | (cmnd << 4); // send lower nibble
+; 0000 0052     LCD_PORT = (LCD_PORT & 0x0F) | (cmnd << 4); // send lower nibble
 	IN   R30,0xB
 	ANDI R30,LOW(0xF)
 	MOV  R26,R30
@@ -1525,84 +1528,84 @@ _LCD_action:
 	ANDI R30,0xF0
 	OR   R30,R26
 	OUT  0xB,R30
-; 0000 0051     LCD_PORT |= (1 << LCD_ENPIN); // EN = 1
+; 0000 0053     LCD_PORT |= (1 << LCD_ENPIN); // EN = 1
 	SBI  0xB,3
-; 0000 0052     delay_us(1);
+; 0000 0054     delay_us(1);
 	__DELAY_USB 4
-; 0000 0053     LCD_PORT &= ~(1 << LCD_ENPIN); // EN = 0
+; 0000 0055     LCD_PORT &= ~(1 << LCD_ENPIN); // EN = 0
 	CBI  0xB,3
-; 0000 0054     delay_ms(2);
+; 0000 0056     delay_ms(2);
 	LDI  R26,LOW(2)
 	LDI  R27,0
 	CALL _delay_ms
-; 0000 0055 }
+; 0000 0057 }
 _0x20C000C:
 	ADIW R28,1
 	RET
 ; .FEND
 ;
 ;void LCD_init(void){
-; 0000 0057 void LCD_init(void){
+; 0000 0059 void LCD_init(void){
 _LCD_init:
 ; .FSTART _LCD_init
-; 0000 0058     LCD_DPIN = 0xFF;
+; 0000 005A     LCD_DPIN = 0xFF;
 	LDI  R30,LOW(255)
 	OUT  0xA,R30
-; 0000 0059     delay_ms(20); // wait before LCD activation
+; 0000 005B     delay_ms(20); // wait before LCD activation
 	LDI  R26,LOW(20)
 	LDI  R27,0
 	CALL _delay_ms
-; 0000 005A     LCD_action(0x02); // 4 bit control
+; 0000 005C     LCD_action(0x02); // 4 bit control
 	LDI  R26,LOW(2)
 	RCALL _LCD_action
-; 0000 005B     LCD_action(0x28); // initialization of 16X2 LCD in 4bit mode
+; 0000 005D     LCD_action(0x28); // initialization of 16X2 LCD in 4bit mode
 	LDI  R26,LOW(40)
 	RCALL _LCD_action
-; 0000 005C     LCD_action(0x0C); // disable cursor
+; 0000 005E     LCD_action(0x0C); // disable cursor
 	LDI  R26,LOW(12)
 	RCALL _LCD_action
-; 0000 005D     LCD_action(0x06); // auto increment cursor
+; 0000 005F     LCD_action(0x06); // auto increment cursor
 	LDI  R26,LOW(6)
 	RCALL _LCD_action
-; 0000 005E     LCD_action(0x01); // clear LCD
+; 0000 0060     LCD_action(0x01); // clear LCD
 	LDI  R26,LOW(1)
 	RCALL _LCD_action
-; 0000 005F     LCD_action(0x80); // cursor at home position
+; 0000 0061     LCD_action(0x80); // cursor at home position
 	LDI  R26,LOW(128)
 	RCALL _LCD_action
-; 0000 0060     delay_ms(2);
+; 0000 0062     delay_ms(2);
 	LDI  R26,LOW(2)
 	LDI  R27,0
 	CALL _delay_ms
-; 0000 0061 }
+; 0000 0063 }
 	RET
 ; .FEND
 ;
 ;
 ;void LCD_clear(void){
-; 0000 0064 void LCD_clear(void){
+; 0000 0066 void LCD_clear(void){
 _LCD_clear:
 ; .FSTART _LCD_clear
-; 0000 0065     LCD_action(0x01); // clear LCD
+; 0000 0067     LCD_action(0x01); // clear LCD
 	LDI  R26,LOW(1)
 	RCALL _LCD_action
-; 0000 0066     delay_ms(2);
+; 0000 0068     delay_ms(2);
 	LDI  R26,LOW(2)
 	LDI  R27,0
 	CALL _delay_ms
-; 0000 0067     LCD_action(0x80); // move to line 1, position 1
+; 0000 0069     LCD_action(0x80); // move to line 1, position 1
 	LDI  R26,LOW(128)
 	RCALL _LCD_action
-; 0000 0068 }
+; 0000 006A }
 	RET
 ; .FEND
 ;
 ;void LCD_print(char *str){
-; 0000 006A void LCD_print(char *str){
+; 0000 006C void LCD_print(char *str){
 _LCD_print:
 ; .FSTART _LCD_print
-; 0000 006B     int i;
-; 0000 006C 	for(i=0; str[i]!=0; i++)
+; 0000 006D     int i;
+; 0000 006E 	for(i=0; str[i]!=0; i++)
 	ST   -Y,R27
 	ST   -Y,R26
 	ST   -Y,R17
@@ -1619,8 +1622,8 @@ _0x14:
 	LD   R30,X
 	CPI  R30,0
 	BREQ _0x15
-; 0000 006D 	{
-; 0000 006E 		LCD_PORT = (LCD_PORT & 0x0F) | (str[i] & 0xF0);
+; 0000 006F 	{
+; 0000 0070 		LCD_PORT = (LCD_PORT & 0x0F) | (str[i] & 0xF0);
 	IN   R30,0xB
 	ANDI R30,LOW(0xF)
 	MOV  R0,R30
@@ -1633,17 +1636,17 @@ _0x14:
 	ANDI R30,LOW(0xF0)
 	OR   R30,R0
 	OUT  0xB,R30
-; 0000 006F 		LCD_PORT |= (1<<LCD_RSPIN); // RS = 1, data reg
+; 0000 0071 		LCD_PORT |= (1<<LCD_RSPIN); // RS = 1, data reg
 	SBI  0xB,2
-; 0000 0070 		LCD_PORT |= (1<<LCD_ENPIN); // EN = 1
+; 0000 0072 		LCD_PORT |= (1<<LCD_ENPIN); // EN = 1
 	SBI  0xB,3
-; 0000 0071 		delay_us(1);
+; 0000 0073 		delay_us(1);
 	__DELAY_USB 4
-; 0000 0072 		LCD_PORT &= ~ (1<<LCD_ENPIN); // EN = 0
+; 0000 0074 		LCD_PORT &= ~ (1<<LCD_ENPIN); // EN = 0
 	CBI  0xB,3
-; 0000 0073 		delay_us(200);
+; 0000 0075 		delay_us(200);
 	__DELAY_USW 553
-; 0000 0074 		LCD_PORT = (LCD_PORT & 0x0F) | (str[i] << 4);
+; 0000 0076 		LCD_PORT = (LCD_PORT & 0x0F) | (str[i] << 4);
 	IN   R30,0xB
 	ANDI R30,LOW(0xF)
 	MOV  R0,R30
@@ -1657,31 +1660,31 @@ _0x14:
 	ANDI R30,0xF0
 	OR   R30,R0
 	OUT  0xB,R30
-; 0000 0075 		LCD_PORT |= (1<<LCD_ENPIN);
+; 0000 0077 		LCD_PORT |= (1<<LCD_ENPIN);
 	SBI  0xB,3
-; 0000 0076 		delay_us(1);
+; 0000 0078 		delay_us(1);
 	__DELAY_USB 4
-; 0000 0077 		LCD_PORT &= ~ (1<<LCD_ENPIN);
+; 0000 0079 		LCD_PORT &= ~ (1<<LCD_ENPIN);
 	CBI  0xB,3
-; 0000 0078 		delay_ms(2);
+; 0000 007A 		delay_ms(2);
 	LDI  R26,LOW(2)
 	LDI  R27,0
 	CALL _delay_ms
-; 0000 0079 	}
+; 0000 007B 	}
 	__ADDWRN 16,17,1
 	RJMP _0x14
 _0x15:
-; 0000 007A }
+; 0000 007C }
 	LDD  R17,Y+1
 	LDD  R16,Y+0
 	RJMP _0x20C000B
 ; .FEND
 ;
 ;void LCD_print_pos(char row, char pos, char *str){
-; 0000 007C void LCD_print_pos(char row, char pos, char *str){
+; 0000 007E void LCD_print_pos(char row, char pos, char *str){
 _LCD_print_pos:
 ; .FSTART _LCD_print_pos
-; 0000 007D     if(row == 0 && pos < 16) // line 1
+; 0000 007F     if(row == 0 && pos < 16) // line 1
 	ST   -Y,R27
 	ST   -Y,R26
 ;	row -> Y+3
@@ -1696,12 +1699,12 @@ _LCD_print_pos:
 _0x17:
 	RJMP _0x16
 _0x18:
-; 0000 007E         LCD_action((pos & 0x0F)|0x80);
+; 0000 0080         LCD_action((pos & 0x0F)|0x80);
 	LDD  R30,Y+2
 	ANDI R30,LOW(0xF)
 	ORI  R30,0x80
-	RJMP _0x49
-; 0000 007F     else if(row == 1 && pos < 16) // line 2
+	RJMP _0x50
+; 0000 0081     else if(row == 1 && pos < 16) // line 2
 _0x16:
 	LDD  R26,Y+3
 	CPI  R26,LOW(0x1)
@@ -1712,134 +1715,138 @@ _0x16:
 _0x1B:
 	RJMP _0x1A
 _0x1C:
-; 0000 0080         LCD_action((pos & 0x0F)|0xC0);
+; 0000 0082         LCD_action((pos & 0x0F)|0xC0);
 	LDD  R30,Y+2
 	ANDI R30,LOW(0xF)
 	ORI  R30,LOW(0xC0)
-_0x49:
+_0x50:
 	MOV  R26,R30
 	RCALL _LCD_action
-; 0000 0081     LCD_print(str);
+; 0000 0083     LCD_print(str);
 _0x1A:
 	LD   R26,Y
 	LDD  R27,Y+1
 	RCALL _LCD_print
-; 0000 0082 }
+; 0000 0084 }
 _0x20C000B:
 	ADIW R28,4
 	RET
 ; .FEND
 ;
-;int read_dht11(int* temp, int* humidity){
-; 0000 0084 int read_dht11(int* temp, int* humidity){
+;int read_dht11(int* temp, int* i_temp, int* humidity, int* i_humidity){
+; 0000 0086 int read_dht11(int* temp, int* i_temp, int* humidity, int* i_humidity){
 _read_dht11:
 ; .FSTART _read_dht11
-; 0000 0085     unsigned char i, j, bytes[5], time_count;
-; 0000 0086     //reset port
-; 0000 0087     DHT11_DDR |= (1<<DHT11_INPUTPIN); //output mode
+; 0000 0087     unsigned char i, j, bytes[5], time_count;
+; 0000 0088     //reset port
+; 0000 0089     DHT11_DDR |= (1<<DHT11_INPUTPIN); //output mode
 	ST   -Y,R27
 	ST   -Y,R26
 	SBIW R28,5
 	CALL __SAVELOCR4
-;	*temp -> Y+11
-;	*humidity -> Y+9
+;	*temp -> Y+15
+;	*i_temp -> Y+13
+;	*humidity -> Y+11
+;	*i_humidity -> Y+9
 ;	i -> R17
 ;	j -> R16
 ;	bytes -> Y+4
 ;	time_count -> R19
 	SBI  0x4,1
-; 0000 0088     DHT11_PORT |= (1<<DHT11_INPUTPIN); // high
+; 0000 008A     DHT11_PORT |= (1<<DHT11_INPUTPIN); // high
 	SBI  0x5,1
-; 0000 0089     delay_ms(100);
+; 0000 008B     delay_ms(100);
 	LDI  R26,LOW(100)
 	LDI  R27,0
 	CALL _delay_ms
-; 0000 008A 	// send start signal
-; 0000 008B 	DHT11_PORT &= ~(1<<DHT11_INPUTPIN); // low
+; 0000 008C 	// send start signal
+; 0000 008D 	DHT11_PORT &= ~(1<<DHT11_INPUTPIN); // low
 	CBI  0x5,1
-; 0000 008C 	delay_ms(18);
+; 0000 008E 	delay_ms(18);
 	LDI  R26,LOW(18)
 	LDI  R27,0
 	CALL _delay_ms
-; 0000 008D 	DHT11_PORT |= (1<<DHT11_INPUTPIN); // high
+; 0000 008F 	DHT11_PORT |= (1<<DHT11_INPUTPIN); // high
 	SBI  0x5,1
-; 0000 008E 	DHT11_DDR &= ~(1<<DHT11_INPUTPIN); //input mode
+; 0000 0090 	DHT11_DDR &= ~(1<<DHT11_INPUTPIN); //input mode
 	CBI  0x4,1
-; 0000 008F 	delay_us(40);
+; 0000 0091 	delay_us(40);
 	__DELAY_USB 147
-; 0000 0090     // check DHT response signal
-; 0000 0091     if((DHT11_PIN & (1 << DHT11_INPUTPIN))){
+; 0000 0092     // check DHT response signal
+; 0000 0093     if((DHT11_PIN & (1 << DHT11_INPUTPIN))){
 	SBIS 0x3,1
 	RJMP _0x1D
-; 0000 0092         // error
-; 0000 0093         return -1;
+; 0000 0094         // error
+; 0000 0095         return -1;
 	LDI  R30,LOW(65535)
 	LDI  R31,HIGH(65535)
 	RJMP _0x20C000A
-; 0000 0094     }
-; 0000 0095     delay_us(80);
+; 0000 0096     }
+; 0000 0097     delay_us(80);
 _0x1D:
 	__DELAY_USW 221
-; 0000 0096     // check DHT pulls up
-; 0000 0097     if(!(DHT11_PIN & (1 << DHT11_INPUTPIN))){
+; 0000 0098     // check DHT pulls up
+; 0000 0099     if(!(DHT11_PIN & (1 << DHT11_INPUTPIN))){
 	SBIC 0x3,1
 	RJMP _0x1E
-; 0000 0098         // error
-; 0000 0099         return -2;
+; 0000 009A         // error
+; 0000 009B         return -2;
 	LDI  R30,LOW(65534)
 	LDI  R31,HIGH(65534)
 	RJMP _0x20C000A
-; 0000 009A     }
-; 0000 009B     delay_us(80);
+; 0000 009C     }
+; 0000 009D     delay_us(80);
 _0x1E:
 	__DELAY_USW 221
-; 0000 009C     // read 5 bytes
-; 0000 009D     for(i = 0; i < 5; i++){
+; 0000 009E     // read 5 bytes
+; 0000 009F     for(i = 0; i < 5; i++){
 	LDI  R17,LOW(0)
 _0x20:
 	CPI  R17,5
 	BRSH _0x21
-; 0000 009E         unsigned char result = 0;
-; 0000 009F         for(j = 0; j < 8; j++){
+; 0000 00A0         unsigned char result = 0;
+; 0000 00A1         for(j = 0; j < 8; j++){
 	SBIW R28,1
 	LDI  R30,LOW(0)
 	ST   Y,R30
-;	*temp -> Y+12
-;	*humidity -> Y+10
+;	*temp -> Y+16
+;	*i_temp -> Y+14
+;	*humidity -> Y+12
+;	*i_humidity -> Y+10
 ;	bytes -> Y+5
 ;	result -> Y+0
 	LDI  R16,LOW(0)
 _0x23:
 	CPI  R16,8
 	BRSH _0x24
-; 0000 00A0             time_count = 0;
+; 0000 00A2             time_count = 0;
 	LDI  R19,LOW(0)
-; 0000 00A1             // wait for a high voltage
-; 0000 00A2             while(!(DHT11_PIN & (1 << DHT11_INPUTPIN))){
+; 0000 00A3             // wait for a high voltage
+; 0000 00A4             while(!(DHT11_PIN & (1 << DHT11_INPUTPIN))){
 _0x25:
 	SBIC 0x3,1
 	RJMP _0x27
-; 0000 00A3                 time_count++;
+; 0000 00A5                 time_count++;
 	SUBI R19,-1
-; 0000 00A4                 if(time_count > DHT11_TIMEOUT) return -3; // timeout error
+; 0000 00A6                 if(time_count > DHT11_TIMEOUT) return -3; // timeout error
 	CPI  R19,201
 	BRLO _0x28
 	LDI  R30,LOW(65533)
 	LDI  R31,HIGH(65533)
 	ADIW R28,1
 	RJMP _0x20C000A
-; 0000 00A5                 delay_us(1);
+; 0000 00A7                 delay_us(1);
 _0x28:
 	__DELAY_USB 4
-; 0000 00A6             }
+; 0000 00A8             }
 	RJMP _0x25
 _0x27:
-; 0000 00A7             delay_us(30);
+; 0000 00A9             delay_us(30);
 	__DELAY_USB 111
-; 0000 00A8             if(DHT11_PIN & (1 << DHT11_INPUTPIN)) // high after 30 us -> bit 1
+; 0000 00AA             if(DHT11_PIN & (1 << DHT11_INPUTPIN)) // high after 30 us -> bit 1
 	SBIS 0x3,1
 	RJMP _0x29
-; 0000 00A9                 result |= (1<<(7-j));
+; 0000 00AB                 result |= (1<<(7-j));
 	LDI  R30,LOW(7)
 	SUB  R30,R16
 	LDI  R26,LOW(1)
@@ -1847,34 +1854,34 @@ _0x27:
 	LD   R26,Y
 	OR   R30,R26
 	ST   Y,R30
-; 0000 00AA             time_count = 0;
+; 0000 00AC             time_count = 0;
 _0x29:
 	LDI  R19,LOW(0)
-; 0000 00AB             // wait until get low
-; 0000 00AC             while(DHT11_PIN & (1 << DHT11_INPUTPIN)){
+; 0000 00AD             // wait until get low
+; 0000 00AE             while(DHT11_PIN & (1 << DHT11_INPUTPIN)){
 _0x2A:
 	SBIS 0x3,1
 	RJMP _0x2C
-; 0000 00AD                 time_count++;
+; 0000 00AF                 time_count++;
 	SUBI R19,-1
-; 0000 00AE                 if(time_count > DHT11_TIMEOUT) return -3; // timeout error
+; 0000 00B0                 if(time_count > DHT11_TIMEOUT) return -3; // timeout error
 	CPI  R19,201
 	BRLO _0x2D
 	LDI  R30,LOW(65533)
 	LDI  R31,HIGH(65533)
 	ADIW R28,1
 	RJMP _0x20C000A
-; 0000 00AF                 delay_us(1);
+; 0000 00B1                 delay_us(1);
 _0x2D:
 	__DELAY_USB 4
-; 0000 00B0             }
+; 0000 00B2             }
 	RJMP _0x2A
 _0x2C:
-; 0000 00B1         }
+; 0000 00B3         }
 	SUBI R16,-1
 	RJMP _0x23
 _0x24:
-; 0000 00B2         bytes[i] = result;
+; 0000 00B4         bytes[i] = result;
 	MOV  R30,R17
 	LDI  R31,0
 	MOVW R26,R28
@@ -1883,22 +1890,22 @@ _0x24:
 	ADC  R31,R27
 	LD   R26,Y
 	STD  Z+0,R26
-; 0000 00B3     }
+; 0000 00B5     }
 	ADIW R28,1
 	SUBI R17,-1
 	RJMP _0x20
 _0x21:
-; 0000 00B4     // reset port
-; 0000 00B5     DHT11_DDR |= (1<<DHT11_INPUTPIN); //output mode
+; 0000 00B6     // reset port
+; 0000 00B7     DHT11_DDR |= (1<<DHT11_INPUTPIN); //output mode
 	SBI  0x4,1
-; 0000 00B6     DHT11_PORT |= (1<<DHT11_INPUTPIN); // high
+; 0000 00B8     DHT11_PORT |= (1<<DHT11_INPUTPIN); // high
 	SBI  0x5,1
-; 0000 00B7     delay_ms(100);
+; 0000 00B9     delay_ms(100);
 	LDI  R26,LOW(100)
 	LDI  R27,0
 	CALL _delay_ms
-; 0000 00B8     // checksum
-; 0000 00B9     if((unsigned char)(bytes[0] + bytes[1] + bytes[2] + bytes[3]) == bytes[4]){
+; 0000 00BA     // checksum
+; 0000 00BB     if((unsigned char)(bytes[0] + bytes[1] + bytes[2] + bytes[3]) == bytes[4]){
 	LDD  R26,Y+4
 	CLR  R27
 	LDD  R30,Y+5
@@ -1917,24 +1924,34 @@ _0x21:
 	LDD  R30,Y+8
 	CP   R30,R26
 	BRNE _0x2E
-; 0000 00BA         *temp = bytes[2];
+; 0000 00BC         *temp = bytes[2];
 	LDD  R30,Y+6
+	LDD  R26,Y+15
+	LDD  R27,Y+15+1
+	LDI  R31,0
+	ST   X+,R30
+	ST   X,R31
+; 0000 00BD         *i_temp = bytes[3];
+	LDD  R30,Y+7
+	LDD  R26,Y+13
+	LDD  R27,Y+13+1
+	LDI  R31,0
+	ST   X+,R30
+	ST   X,R31
+; 0000 00BE         *humidity = bytes[0];
+	LDD  R30,Y+4
 	LDD  R26,Y+11
 	LDD  R27,Y+11+1
 	LDI  R31,0
 	ST   X+,R30
 	ST   X,R31
-; 0000 00BB //        *temp = *temp << 8;
-; 0000 00BC //        *temp = *temp | bytes[3];
-; 0000 00BD         *humidity = bytes[0];
-	LDD  R30,Y+4
+; 0000 00BF         *i_humidity = bytes[1];
+	LDD  R30,Y+5
 	LDD  R26,Y+9
 	LDD  R27,Y+9+1
 	LDI  R31,0
 	ST   X+,R30
 	ST   X,R31
-; 0000 00BE //        *humidity = *humidity << 8;
-; 0000 00BF //        *humidity = *humidity | bytes[1];
 ; 0000 00C0         return 0;
 	LDI  R30,LOW(0)
 	LDI  R31,HIGH(0)
@@ -1947,7 +1964,7 @@ _0x2E:
 	LDI  R31,HIGH(65532)
 _0x20C000A:
 	CALL __LOADLOCR4
-	ADIW R28,13
+	ADIW R28,17
 	RET
 ; 0000 00C4 }
 ; .FEND
@@ -1956,11 +1973,11 @@ _0x20C000A:
 ; 0000 00C6 void main(void){
 _main:
 ; .FSTART _main
-; 0000 00C7     int temp, humidity, err_code, light, temp_threshold = -1, humidity_threshold = -1, light_threshold = -1;
+; 0000 00C7     int temp, i_temp, humidity, i_humidity, err_code, light, temp_threshold = -1, humidity_threshold = -1, light_thresho ...
 ; 0000 00C8     char i, j, recv_data[20], loop_count = 0, *p;
 ; 0000 00C9     char mss[24];
 ; 0000 00CA     #asm("sei ");
-	SBIW R28,57
+	SBIW R28,61
 	LDI  R24,29
 	LDI  R26,LOW(26)
 	LDI  R27,HIGH(26)
@@ -1968,8 +1985,10 @@ _main:
 	LDI  R31,HIGH(_0x2F*2)
 	CALL __INITLOCB
 ;	temp -> R16,R17
-;	humidity -> R18,R19
-;	err_code -> R20,R21
+;	i_temp -> R18,R19
+;	humidity -> R20,R21
+;	i_humidity -> Y+59
+;	err_code -> Y+57
 ;	light -> Y+55
 ;	temp_threshold -> Y+53
 ;	humidity_threshold -> Y+51
@@ -2013,28 +2032,54 @@ _main:
 	CALL __EEPROMRDW
 	STD  Y+49,R30
 	STD  Y+49+1,R31
-; 0000 00D4     //USART_put("Hello from ATmega328p");
-; 0000 00D5 	while(1){
+; 0000 00D4     // send update threshold
+; 0000 00D5     sprintf(mss, "1 %d %d %d", temp_threshold, humidity_threshold, light_threshold);
+	MOVW R30,R28
+	ST   -Y,R31
+	ST   -Y,R30
+	__POINTW1FN _0x0,0
+	ST   -Y,R31
+	ST   -Y,R30
+	LDD  R30,Y+57
+	LDD  R31,Y+57+1
+	CALL __CWD1
+	CALL __PUTPARD1
+	LDD  R30,Y+59
+	LDD  R31,Y+59+1
+	CALL __CWD1
+	CALL __PUTPARD1
+	LDD  R30,Y+61
+	LDD  R31,Y+61+1
+	CALL __CWD1
+	CALL __PUTPARD1
+	LDI  R24,12
+	CALL _sprintf
+	ADIW R28,16
+; 0000 00D6     USART_put(mss);
+	MOVW R26,R28
+	RCALL _USART_put
+; 0000 00D7     //USART_put("Hello from ATmega328p");
+; 0000 00D8 	while(1){
 _0x30:
-; 0000 00D6         // check uart data received
-; 0000 00D7         loop_count++;
+; 0000 00D9         // check uart data received
+; 0000 00DA         loop_count++;
 	LDD  R30,Y+26
 	SUBI R30,-LOW(1)
 	STD  Y+26,R30
-; 0000 00D8         if(recv_done){
+; 0000 00DB         if(recv_done){
 	TST  R4
 	BRNE PC+2
 	RJMP _0x33
-; 0000 00D9             recv_done = 0;
+; 0000 00DC             recv_done = 0;
 	CLR  R4
-; 0000 00DA             for(i = 0; i < 20; i++) // find 's';
+; 0000 00DD             for(i = 0; i < 20; i++) // find 's';
 	LDI  R30,LOW(0)
 	STD  Y+48,R30
 _0x35:
 	LDD  R26,Y+48
 	CPI  R26,LOW(0x14)
 	BRSH _0x36
-; 0000 00DB                 if(recv_buf[i] == 's') break;
+; 0000 00DE                 if(recv_buf[i] == 's') break;
 	LDD  R30,Y+48
 	LDI  R31,0
 	SUBI R30,LOW(-_recv_buf)
@@ -2042,7 +2087,7 @@ _0x35:
 	LD   R26,Z
 	CPI  R26,LOW(0x73)
 	BREQ _0x36
-; 0000 00DC             if(i != 20){
+; 0000 00DF             if(i != 20){
 	LDD  R30,Y+48
 	SUBI R30,-LOW(1)
 	STD  Y+48,R30
@@ -2052,7 +2097,7 @@ _0x36:
 	CPI  R26,LOW(0x14)
 	BRNE PC+2
 	RJMP _0x38
-; 0000 00DD                 j = (i + 1) % 20;
+; 0000 00E0                 j = (i + 1) % 20;
 	LDD  R30,Y+48
 	LDI  R31,0
 	ADIW R30,1
@@ -2061,7 +2106,7 @@ _0x36:
 	LDI  R31,HIGH(20)
 	CALL __MODW21
 	STD  Y+47,R30
-; 0000 00DE                 memset(recv_data, 0, 20);
+; 0000 00E1                 memset(recv_data, 0, 20);
 	MOVW R30,R28
 	ADIW R30,27
 	ST   -Y,R31
@@ -2071,13 +2116,13 @@ _0x36:
 	LDI  R26,LOW(20)
 	LDI  R27,0
 	CALL _memset
-; 0000 00DF                 while(j != i){
+; 0000 00E2                 while(j != i){
 _0x39:
 	LDD  R30,Y+48
 	LDD  R26,Y+47
 	CP   R30,R26
 	BREQ _0x3B
-; 0000 00E0                     if(recv_buf[j] == 'e') break;
+; 0000 00E3                     if(recv_buf[j] == 'e') break;
 	LDD  R30,Y+47
 	LDI  R31,0
 	SUBI R30,LOW(-_recv_buf)
@@ -2085,7 +2130,7 @@ _0x39:
 	LD   R26,Z
 	CPI  R26,LOW(0x65)
 	BREQ _0x3B
-; 0000 00E1                     recv_data[(j-i+20)%20-1] = recv_buf[j];
+; 0000 00E4                     recv_data[(j-i+20)%20-1] = recv_buf[j];
 	LDD  R26,Y+47
 	CLR  R27
 	LDD  R30,Y+48
@@ -2109,7 +2154,7 @@ _0x39:
 	SBCI R31,HIGH(-_recv_buf)
 	LD   R30,Z
 	ST   X,R30
-; 0000 00E2                     j = (j+1) % 20;
+; 0000 00E5                     j = (j+1) % 20;
 	LDD  R30,Y+47
 	LDI  R31,0
 	ADIW R30,1
@@ -2118,47 +2163,18 @@ _0x39:
 	LDI  R31,HIGH(20)
 	CALL __MODW21
 	STD  Y+47,R30
-; 0000 00E3                 }
+; 0000 00E6                 }
 	RJMP _0x39
 _0x3B:
-; 0000 00E4                 if(j != i){
+; 0000 00E7                 if(j != i){
 	LDD  R30,Y+48
 	LDD  R26,Y+47
 	CP   R30,R26
 	BRNE PC+2
 	RJMP _0x3D
-; 0000 00E5                     i = 0;
+; 0000 00E8                     i = 0;
 	LDI  R30,LOW(0)
 	STD  Y+48,R30
-; 0000 00E6                     p = strrchr(recv_data, ' ');
-	MOVW R30,R28
-	ADIW R30,27
-	ST   -Y,R31
-	ST   -Y,R30
-	LDI  R26,LOW(32)
-	CALL _strrchr
-	STD  Y+24,R30
-	STD  Y+24+1,R31
-; 0000 00E7                     sscanf(p + 1, "%d", &light_threshold);
-	ADIW R30,1
-	ST   -Y,R31
-	ST   -Y,R30
-	__POINTW1FN _0x0,0
-	ST   -Y,R31
-	ST   -Y,R30
-	MOVW R30,R28
-	ADIW R30,53
-	CLR  R22
-	CLR  R23
-	CALL __PUTPARD1
-	LDI  R24,4
-	CALL _sscanf
-	ADIW R28,8
-; 0000 00E8                     *p = 0;
-	LDD  R26,Y+24
-	LDD  R27,Y+24+1
-	LDI  R30,LOW(0)
-	ST   X,R30
 ; 0000 00E9                     p = strrchr(recv_data, ' ');
 	MOVW R30,R28
 	ADIW R30,27
@@ -2168,15 +2184,15 @@ _0x3B:
 	CALL _strrchr
 	STD  Y+24,R30
 	STD  Y+24+1,R31
-; 0000 00EA                     sscanf(p + 1, "%d", &humidity_threshold);
+; 0000 00EA                     sscanf(p + 1, "%d", &light_threshold);
 	ADIW R30,1
 	ST   -Y,R31
 	ST   -Y,R30
-	__POINTW1FN _0x0,0
+	__POINTW1FN _0x0,8
 	ST   -Y,R31
 	ST   -Y,R30
 	MOVW R30,R28
-	ADIW R30,55
+	ADIW R30,53
 	CLR  R22
 	CLR  R23
 	CALL __PUTPARD1
@@ -2197,11 +2213,40 @@ _0x3B:
 	CALL _strrchr
 	STD  Y+24,R30
 	STD  Y+24+1,R31
-; 0000 00ED                     sscanf(p + 1, "%d", &temp_threshold);
+; 0000 00ED                     sscanf(p + 1, "%d", &humidity_threshold);
 	ADIW R30,1
 	ST   -Y,R31
 	ST   -Y,R30
-	__POINTW1FN _0x0,0
+	__POINTW1FN _0x0,8
+	ST   -Y,R31
+	ST   -Y,R30
+	MOVW R30,R28
+	ADIW R30,55
+	CLR  R22
+	CLR  R23
+	CALL __PUTPARD1
+	LDI  R24,4
+	CALL _sscanf
+	ADIW R28,8
+; 0000 00EE                     *p = 0;
+	LDD  R26,Y+24
+	LDD  R27,Y+24+1
+	LDI  R30,LOW(0)
+	ST   X,R30
+; 0000 00EF                     p = strrchr(recv_data, ' ');
+	MOVW R30,R28
+	ADIW R30,27
+	ST   -Y,R31
+	ST   -Y,R30
+	LDI  R26,LOW(32)
+	CALL _strrchr
+	STD  Y+24,R30
+	STD  Y+24+1,R31
+; 0000 00F0                     sscanf(p + 1, "%d", &temp_threshold);
+	ADIW R30,1
+	ST   -Y,R31
+	ST   -Y,R30
+	__POINTW1FN _0x0,8
 	ST   -Y,R31
 	ST   -Y,R30
 	MOVW R30,R28
@@ -2212,179 +2257,32 @@ _0x3B:
 	LDI  R24,4
 	CALL _sscanf
 	ADIW R28,8
-; 0000 00EE                     // eeprom  write
-; 0000 00EF                     eeprom_write_word(0, temp_threshold);
+; 0000 00F1                     // eeprom  write
+; 0000 00F2                     eeprom_write_word(0, temp_threshold);
 	LDD  R30,Y+53
 	LDD  R31,Y+53+1
 	LDI  R26,LOW(0)
 	LDI  R27,HIGH(0)
 	CALL __EEPROMWRW
-; 0000 00F0                     eeprom_write_word(2, humidity_threshold);
+; 0000 00F3                     eeprom_write_word(2, humidity_threshold);
 	LDD  R30,Y+51
 	LDD  R31,Y+51+1
 	LDI  R26,LOW(2)
 	LDI  R27,HIGH(2)
 	CALL __EEPROMWRW
-; 0000 00F1                     eeprom_write_word(4, light_threshold);
+; 0000 00F4                     eeprom_write_word(4, light_threshold);
 	LDD  R30,Y+49
 	LDD  R31,Y+49+1
 	LDI  R26,LOW(4)
 	LDI  R27,HIGH(4)
 	CALL __EEPROMWRW
-; 0000 00F2                 }
-; 0000 00F3             }
-_0x3D:
-; 0000 00F4         }
-_0x38:
 ; 0000 00F5 
-; 0000 00F6 
-; 0000 00F7         if(loop_count % 10 == 0){ // read rht11 sensor after every 1s
-_0x33:
-	LDD  R26,Y+26
-	CLR  R27
-	LDI  R30,LOW(10)
-	LDI  R31,HIGH(10)
-	CALL __MODW21
-	SBIW R30,0
-	BREQ PC+2
-	RJMP _0x3E
-; 0000 00F8             light = ADC_read(6);
-	LDI  R26,LOW(6)
-	RCALL _ADC_read
-	STD  Y+55,R30
-	STD  Y+55+1,R31
-; 0000 00F9             if((err_code = read_dht11(&temp, &humidity)) == 0){
-	IN   R30,SPL
-	IN   R31,SPH
-	SBIW R30,1
-	ST   -Y,R31
-	ST   -Y,R30
-	PUSH R17
-	PUSH R16
-	IN   R26,SPL
-	IN   R27,SPH
-	SBIW R26,1
-	PUSH R19
-	PUSH R18
-	RCALL _read_dht11
-	POP  R18
-	POP  R19
-	POP  R16
-	POP  R17
-	MOVW R20,R30
-	SBIW R30,0
-	BREQ PC+2
-	RJMP _0x3F
-; 0000 00FA                 sprintf(mss, "0 %d %d %d", temp, humidity, light);
+; 0000 00F6                     // send update threshold
+; 0000 00F7                     sprintf(mss, "1 %d %d %d", temp_threshold, humidity_threshold, light_threshold);
 	MOVW R30,R28
 	ST   -Y,R31
 	ST   -Y,R30
-	__POINTW1FN _0x0,3
-	ST   -Y,R31
-	ST   -Y,R30
-	MOVW R30,R16
-	CALL __CWD1
-	CALL __PUTPARD1
-	MOVW R30,R18
-	CALL __CWD1
-	CALL __PUTPARD1
-	__GETW1SX 67
-	CALL __CWD1
-	CALL __PUTPARD1
-	LDI  R24,12
-	CALL _sprintf
-	ADIW R28,16
-; 0000 00FB                 USART_put(mss);
-	MOVW R26,R28
-	RCALL _USART_put
-; 0000 00FC                 // LCD update
-; 0000 00FD                 LCD_clear();
-	RCALL _LCD_clear
-; 0000 00FE                 sprintf(mss, "T:%doC, H:%d%%", temp, humidity);
-	MOVW R30,R28
-	ST   -Y,R31
-	ST   -Y,R30
-	__POINTW1FN _0x0,14
-	ST   -Y,R31
-	ST   -Y,R30
-	MOVW R30,R16
-	CALL __CWD1
-	CALL __PUTPARD1
-	MOVW R30,R18
-	CALL __CWD1
-	CALL __PUTPARD1
-	LDI  R24,8
-	CALL _sprintf
-	ADIW R28,12
-; 0000 00FF                 LCD_print(mss);
-	MOVW R26,R28
-	RCALL _LCD_print
-; 0000 0100                 sprintf(mss, "L:%4.2f%%", light*100.0/1024);
-	MOVW R30,R28
-	ST   -Y,R31
-	ST   -Y,R30
-	__POINTW1FN _0x0,29
-	ST   -Y,R31
-	ST   -Y,R30
-	LDD  R30,Y+59
-	LDD  R31,Y+59+1
-	CALL __CWD1
-	CALL __CDF1
-	__GETD2N 0x42C80000
-	CALL __MULF12
-	MOVW R26,R30
-	MOVW R24,R22
-	__GETD1N 0x44800000
-	CALL __DIVF21
-	CALL __PUTPARD1
-	LDI  R24,4
-	CALL _sprintf
-	ADIW R28,8
-; 0000 0101                 LCD_print_pos(1, 0, mss);
-	LDI  R30,LOW(1)
-	ST   -Y,R30
-	LDI  R30,LOW(0)
-	ST   -Y,R30
-	MOVW R26,R28
-	ADIW R26,2
-	RCALL _LCD_print_pos
-; 0000 0102 
-; 0000 0103             } else{
-	RJMP _0x40
-_0x3F:
-; 0000 0104                 sprintf(mss, "-1 %d", err_code);
-	MOVW R30,R28
-	ST   -Y,R31
-	ST   -Y,R30
-	__POINTW1FN _0x0,39
-	ST   -Y,R31
-	ST   -Y,R30
-	MOVW R30,R20
-	CALL __CWD1
-	CALL __PUTPARD1
-	LDI  R24,4
-	CALL _sprintf
-	ADIW R28,8
-; 0000 0105                 USART_put(mss);
-	MOVW R26,R28
-	RCALL _USART_put
-; 0000 0106             }
-_0x40:
-; 0000 0107         }
-; 0000 0108 
-; 0000 0109         if(loop_count >= 55){ // send threshold
-_0x3E:
-	LDD  R26,Y+26
-	CPI  R26,LOW(0x37)
-	BRLO _0x41
-; 0000 010A             loop_count = 0;
-	LDI  R30,LOW(0)
-	STD  Y+26,R30
-; 0000 010B             sprintf(mss, "1 %d %d %d", temp_threshold, humidity_threshold, light_threshold);
-	MOVW R30,R28
-	ST   -Y,R31
-	ST   -Y,R30
-	__POINTW1FN _0x0,45
+	__POINTW1FN _0x0,0
 	ST   -Y,R31
 	ST   -Y,R30
 	LDD  R30,Y+57
@@ -2402,60 +2300,268 @@ _0x3E:
 	LDI  R24,12
 	CALL _sprintf
 	ADIW R28,16
-; 0000 010C             USART_put(mss);
+; 0000 00F8                     USART_put(mss);
 	MOVW R26,R28
 	RCALL _USART_put
-; 0000 010D         }
-; 0000 010E 
-; 0000 010F         // check threshold
-; 0000 0110         PORTB.2 = temp_threshold < temp;
-_0x41:
+; 0000 00F9                 }
+; 0000 00FA             }
+_0x3D:
+; 0000 00FB         }
+_0x38:
+; 0000 00FC 
+; 0000 00FD 
+; 0000 00FE         if(loop_count >= 10){ // read rht11 sensor after every 1s
+_0x33:
+	LDD  R26,Y+26
+	CPI  R26,LOW(0xA)
+	BRSH PC+2
+	RJMP _0x3E
+; 0000 00FF             loop_count = 0;
+	LDI  R30,LOW(0)
+	STD  Y+26,R30
+; 0000 0100             light = 1024-ADC_read(5);
+	LDI  R26,LOW(5)
+	RCALL _ADC_read
+	LDI  R26,LOW(1024)
+	LDI  R27,HIGH(1024)
+	SUB  R26,R30
+	SBC  R27,R31
+	STD  Y+55,R26
+	STD  Y+55+1,R27
+; 0000 0101             if((err_code = read_dht11(&temp, &i_temp, &humidity, &i_humidity)) == 0){
+	IN   R30,SPL
+	IN   R31,SPH
+	SBIW R30,1
+	ST   -Y,R31
+	ST   -Y,R30
+	PUSH R17
+	PUSH R16
+	IN   R30,SPL
+	IN   R31,SPH
+	SBIW R30,1
+	ST   -Y,R31
+	ST   -Y,R30
+	PUSH R19
+	PUSH R18
+	IN   R30,SPL
+	IN   R31,SPH
+	SBIW R30,1
+	ST   -Y,R31
+	ST   -Y,R30
+	PUSH R21
+	PUSH R20
+	MOVW R26,R28
+	SUBI R26,LOW(-(65))
+	SBCI R27,HIGH(-(65))
+	RCALL _read_dht11
+	POP  R20
+	POP  R21
+	POP  R18
+	POP  R19
+	POP  R16
+	POP  R17
+	STD  Y+57,R30
+	STD  Y+57+1,R31
+	SBIW R30,0
+	BREQ PC+2
+	RJMP _0x3F
+; 0000 0102                 sprintf(mss, "0 %d %d %d %d %d", temp, i_temp, humidity, i_humidity, light);
+	MOVW R30,R28
+	ST   -Y,R31
+	ST   -Y,R30
+	__POINTW1FN _0x0,11
+	ST   -Y,R31
+	ST   -Y,R30
 	MOVW R30,R16
+	CALL __CWD1
+	CALL __PUTPARD1
+	MOVW R30,R18
+	CALL __CWD1
+	CALL __PUTPARD1
+	MOVW R30,R20
+	CALL __CWD1
+	CALL __PUTPARD1
+	__GETW1SX 75
+	CALL __CWD1
+	CALL __PUTPARD1
+	__GETW1SX 75
+	CALL __CWD1
+	CALL __PUTPARD1
+	LDI  R24,20
+	CALL _sprintf
+	ADIW R28,24
+; 0000 0103                 USART_put(mss);
+	MOVW R26,R28
+	RCALL _USART_put
+; 0000 0104                 // LCD update
+; 0000 0105                 LCD_clear();
+	RCALL _LCD_clear
+; 0000 0106                 sprintf(mss, "T:%d.%doC H:%d.%d%%", temp, i_temp, humidity, i_humidity);
+	MOVW R30,R28
+	ST   -Y,R31
+	ST   -Y,R30
+	__POINTW1FN _0x0,28
+	ST   -Y,R31
+	ST   -Y,R30
+	MOVW R30,R16
+	CALL __CWD1
+	CALL __PUTPARD1
+	MOVW R30,R18
+	CALL __CWD1
+	CALL __PUTPARD1
+	MOVW R30,R20
+	CALL __CWD1
+	CALL __PUTPARD1
+	__GETW1SX 75
+	CALL __CWD1
+	CALL __PUTPARD1
+	LDI  R24,16
+	CALL _sprintf
+	ADIW R28,20
+; 0000 0107                 LCD_print(mss);
+	MOVW R26,R28
+	RCALL _LCD_print
+; 0000 0108                 sprintf(mss, "L:%4.2f%%", light*100.0/1024);
+	MOVW R30,R28
+	ST   -Y,R31
+	ST   -Y,R30
+	__POINTW1FN _0x0,48
+	ST   -Y,R31
+	ST   -Y,R30
+	LDD  R30,Y+59
+	LDD  R31,Y+59+1
+	CALL __CWD1
+	CALL __CDF1
+	__GETD2N 0x42C80000
+	CALL __MULF12
+	MOVW R26,R30
+	MOVW R24,R22
+	__GETD1N 0x44800000
+	CALL __DIVF21
+	CALL __PUTPARD1
+	LDI  R24,4
+	CALL _sprintf
+	ADIW R28,8
+; 0000 0109                 LCD_print_pos(1, 0, mss);
+	LDI  R30,LOW(1)
+	ST   -Y,R30
+	LDI  R30,LOW(0)
+	ST   -Y,R30
+	MOVW R26,R28
+	ADIW R26,2
+	RCALL _LCD_print_pos
+; 0000 010A 
+; 0000 010B             } else{
+	RJMP _0x40
+_0x3F:
+; 0000 010C                 sprintf(mss, "-1 %d", err_code);
+	MOVW R30,R28
+	ST   -Y,R31
+	ST   -Y,R30
+	__POINTW1FN _0x0,58
+	ST   -Y,R31
+	ST   -Y,R30
+	LDD  R30,Y+61
+	LDD  R31,Y+61+1
+	CALL __CWD1
+	CALL __PUTPARD1
+	LDI  R24,4
+	CALL _sprintf
+	ADIW R28,8
+; 0000 010D                 USART_put(mss);
+	MOVW R26,R28
+	RCALL _USART_put
+; 0000 010E             }
+_0x40:
+; 0000 010F         }
+; 0000 0110 
+; 0000 0111         // check threshold
+; 0000 0112         PORTB.2 = temp_threshold < temp || (temp_threshold == temp && i_temp > 0);
+_0x3E:
 	LDD  R26,Y+53
 	LDD  R27,Y+53+1
-	CALL __LTW12
-	CPI  R30,0
+	CP   R26,R16
+	CPC  R27,R17
+	BRLT _0x41
+	CP   R16,R26
+	CPC  R17,R27
 	BRNE _0x42
-	CBI  0x5,2
-	RJMP _0x43
+	CLR  R0
+	CP   R0,R18
+	CPC  R0,R19
+	BRLT _0x41
 _0x42:
+	LDI  R30,0
+	RJMP _0x44
+_0x41:
+	LDI  R30,1
+_0x44:
+	CPI  R30,0
+	BRNE _0x45
+	CBI  0x5,2
+	RJMP _0x46
+_0x45:
 	SBI  0x5,2
-_0x43:
-; 0000 0111         PORTB.3 = humidity_threshold < humidity;
-	MOVW R30,R18
+_0x46:
+; 0000 0113         PORTB.3 = humidity_threshold < humidity || (humidity_threshold == humidity && i_humidity > 0);
 	LDD  R26,Y+51
 	LDD  R27,Y+51+1
-	CALL __LTW12
+	CP   R26,R20
+	CPC  R27,R21
+	BRLT _0x47
+	CP   R20,R26
+	CPC  R21,R27
+	BRNE _0x48
+	LDD  R26,Y+59
+	LDD  R27,Y+59+1
+	CALL __CPW02
+	BRLT _0x47
+_0x48:
+	LDI  R30,0
+	RJMP _0x4A
+_0x47:
+	LDI  R30,1
+_0x4A:
 	CPI  R30,0
-	BRNE _0x44
+	BRNE _0x4B
 	CBI  0x5,3
-	RJMP _0x45
-_0x44:
+	RJMP _0x4C
+_0x4B:
 	SBI  0x5,3
-_0x45:
-; 0000 0112         PORTB.4 = light_threshold > light;
+_0x4C:
+; 0000 0114         PORTB.4 = light_threshold > light*100.0/1024;
 	LDD  R30,Y+55
 	LDD  R31,Y+55+1
+	CALL __CWD1
+	CALL __CDF1
+	__GETD2N 0x42C80000
+	CALL __MULF12
+	MOVW R26,R30
+	MOVW R24,R22
+	__GETD1N 0x44800000
+	CALL __DIVF21
 	LDD  R26,Y+49
 	LDD  R27,Y+49+1
-	CALL __GTW12
+	CALL __CWD2
+	CALL __CDF2
+	CALL __GTF12
 	CPI  R30,0
-	BRNE _0x46
+	BRNE _0x4D
 	CBI  0x5,4
-	RJMP _0x47
-_0x46:
+	RJMP _0x4E
+_0x4D:
 	SBI  0x5,4
-_0x47:
-; 0000 0113 
-; 0000 0114 		delay_ms(100);
+_0x4E:
+; 0000 0115 
+; 0000 0116 		delay_ms(100);
 	LDI  R26,LOW(100)
 	LDI  R27,0
 	CALL _delay_ms
-; 0000 0115 	}
+; 0000 0117 	}
 	RJMP _0x30
-; 0000 0116 }
-_0x48:
-	RJMP _0x48
+; 0000 0118 }
+_0x4F:
+	RJMP _0x4F
 ; .FEND
 	#ifndef __SLEEP_DEFINED__
 	#define __SLEEP_DEFINED__
@@ -5002,6 +5108,16 @@ __CMPF120:
 	BREQ __CMPF123
 	RJMP __CMPF121
 
+__GTF12:
+	RCALL __CMPF12
+	LDI  R30,1
+	BREQ __GTF120
+	BRCC __GTF121
+__GTF120:
+	CLR  R30
+__GTF121:
+	RET
+
 __ADDW2R15:
 	CLR  R0
 	ADD  R26,R15
@@ -5058,22 +5174,11 @@ __CWD1:
 	MOV  R23,R22
 	RET
 
-__LTW12:
-	CP   R26,R30
-	CPC  R27,R31
-	LDI  R30,1
-	BRLT __LTW12T
-	CLR  R30
-__LTW12T:
-	RET
-
-__GTW12:
-	CP   R30,R26
-	CPC  R31,R27
-	LDI  R30,1
-	BRLT __GTW12T
-	CLR  R30
-__GTW12T:
+__CWD2:
+	MOV  R24,R27
+	ADD  R24,R24
+	SBC  R24,R24
+	MOV  R25,R24
 	RET
 
 __MULD12U:
@@ -5315,6 +5420,15 @@ __PUTPARD2:
 	ST   -Y,R26
 	RET
 
+__CDF2U:
+	SET
+	RJMP __CDF2U0
+__CDF2:
+	CLT
+__CDF2U0:
+	RCALL __SWAPD12
+	RCALL __CDF1U0
+
 __SWAPD12:
 	MOV  R1,R24
 	MOV  R24,R22
@@ -5389,6 +5503,12 @@ __CPD10:
 	SBIW R30,0
 	SBCI R22,0
 	SBCI R23,0
+	RET
+
+__CPW02:
+	CLR  R0
+	CP   R0,R26
+	CPC  R0,R27
 	RET
 
 __SAVELOCR6:

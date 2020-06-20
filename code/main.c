@@ -1,3 +1,5 @@
+#define F_CPU 11059200
+
 #include <mega328p.h>
 #include <delay.h>
 #include <stdio.h>
@@ -10,7 +12,7 @@
 #define DHT11_PIN PINB
 #define DHT11_INPUTPIN 1
 #define DHT11_TIMEOUT 200
-#define V_REF 5.0
+#define V_REF 5
 #define LCD_PORT PORTD
 #define LCD_DPIN DDRD
 #define LCD_RSPIN 2
@@ -129,7 +131,7 @@ void LCD_print_pos(char row, char pos, char *str){
     LCD_print(str);
 }
 
-int read_dht11(int* temp, int* humidity){
+int read_dht11(int* temp, int* i_temp, int* humidity, int* i_humidity){
     unsigned char i, j, bytes[5], time_count;
     //reset port
     DHT11_DDR |= (1<<DHT11_INPUTPIN); //output mode
@@ -184,11 +186,9 @@ int read_dht11(int* temp, int* humidity){
     // checksum
     if((unsigned char)(bytes[0] + bytes[1] + bytes[2] + bytes[3]) == bytes[4]){  
         *temp = bytes[2];
-//        *temp = *temp << 8;
-//        *temp = *temp | bytes[3];
+        *i_temp = bytes[3];
         *humidity = bytes[0];
-//        *humidity = *humidity << 8;
-//        *humidity = *humidity | bytes[1];
+        *i_humidity = bytes[1];
         return 0;
     }            
     // checksum error
@@ -196,7 +196,7 @@ int read_dht11(int* temp, int* humidity){
 }
 
 void main(void){
-    int temp, humidity, err_code, light, temp_threshold = -1, humidity_threshold = -1, light_threshold = -1;
+    int temp, i_temp, humidity, i_humidity, err_code, light, temp_threshold = -1, humidity_threshold = -1, light_threshold = -1;
     char i, j, recv_data[20], loop_count = 0, *p;
     char mss[24];
     #asm("sei ");        
@@ -209,6 +209,9 @@ void main(void){
     temp_threshold = eeprom_read_word(0);
     humidity_threshold = eeprom_read_word(2);
     light_threshold = eeprom_read_word(4);
+    // send update threshold
+    sprintf(mss, "1 %d %d %d", temp_threshold, humidity_threshold, light_threshold);
+    USART_put(mss);
     //USART_put("Hello from ATmega328p"); 
 	while(1){               
         // check uart data received 
@@ -238,20 +241,25 @@ void main(void){
                     // eeprom  write
                     eeprom_write_word(0, temp_threshold);
                     eeprom_write_word(2, humidity_threshold);
-                    eeprom_write_word(4, light_threshold);  
+                    eeprom_write_word(4, light_threshold);    
+                      
+                    // send update threshold
+                    sprintf(mss, "1 %d %d %d", temp_threshold, humidity_threshold, light_threshold);
+                    USART_put(mss);  
                 }
             }
         }
         
         
-        if(loop_count % 10 == 0){ // read rht11 sensor after every 1s                    
-            light = ADC_read(6);
-            if((err_code = read_dht11(&temp, &humidity)) == 0){ 
-                sprintf(mss, "0 %d %d %d", temp, humidity, light);
+        if(loop_count >= 10){ // read rht11 sensor after every 1s   
+            loop_count = 0;                 
+            light = 1024-ADC_read(5);
+            if((err_code = read_dht11(&temp, &i_temp, &humidity, &i_humidity)) == 0){ 
+                sprintf(mss, "0 %d %d %d %d %d", temp, i_temp, humidity, i_humidity, light);
                 USART_put(mss);
                 // LCD update
                 LCD_clear();
-                sprintf(mss, "T:%doC, H:%d%%", temp, humidity);
+                sprintf(mss, "T:%d.%doC H:%d.%d%%", temp, i_temp, humidity, i_humidity);
                 LCD_print(mss);
                 sprintf(mss, "L:%4.2f%%", light*100.0/1024);
                 LCD_print_pos(1, 0, mss);
@@ -261,17 +269,11 @@ void main(void){
                 USART_put(mss);
             }
         }
-        
-        if(loop_count >= 55){ // send threshold
-            loop_count = 0;
-            sprintf(mss, "1 %d %d %d", temp_threshold, humidity_threshold, light_threshold);
-            USART_put(mss);
-        }
-        
+
         // check threshold 
-        PORTB.2 = temp_threshold < temp;
-        PORTB.3 = humidity_threshold < humidity;
-        PORTB.4 = light_threshold > light;
+        PORTB.2 = temp_threshold < temp || (temp_threshold == temp && i_temp > 0);
+        PORTB.3 = humidity_threshold < humidity || (humidity_threshold == humidity && i_humidity > 0);
+        PORTB.4 = light_threshold > light*100.0/1024;
         
 		delay_ms(100);
 	}
