@@ -43,7 +43,7 @@
                 <lvc:Axis ></lvc:Axis>
             </lvc:CartesianChart.AxisX>
         </lvc:CartesianChart>
-        <Label Name="currentTime" HorizontalAlignment="Left" Height="58" Margin="600,13,0,0" VerticalAlignment="Top" Width="159" FontSize="24"/>
+        <Label Name="currentTime" HorizontalAlignment="Left" Height="58" Margin="619,13,0,0" VerticalAlignment="Top" Width="140" FontSize="24"/>
         <TextBlock x:Name="nhiet_do" HorizontalAlignment="Left" Height="18" Margin="524,12,0,0" TextWrapping="Wrap" Text="no data" VerticalAlignment="Top" Width="49"/>
         <TextBlock x:Name="do_am" HorizontalAlignment="Left" Height="18" Margin="524,38,0,0" TextWrapping="Wrap" Text="no data" VerticalAlignment="Top" Width="49"/>
         <TextBlock x:Name="anh_sang" HorizontalAlignment="Left" Height="18" Margin="524,59,0,0" TextWrapping="Wrap" Text="no data" VerticalAlignment="Top" Width="49"/>
@@ -53,5 +53,7 @@
         <TextBox x:Name="nguong_nhiet_do"  HorizontalAlignment="Left" Height="20" Margin="284,15,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="35" />
         <TextBox x:Name="nguong_do_am" HorizontalAlignment="Left" Height="20" Margin="284,40,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="35" />
         <TextBox x:Name="nguong_anh_sang" HorizontalAlignment="Left" Height="20" Margin="284,65,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="35"/>
+        <TextBlock x:Name="firebase_label" HorizontalAlignment="Left" Height="18" Margin="440,82,0,0" TextWrapping="Wrap" Text="Firebase" VerticalAlignment="Top" Width="59"/>
+        <TextBlock x:Name="firebase" HorizontalAlignment="Left" Height="18" Margin="524,82,0,0" TextWrapping="Wrap" Text="not connected" VerticalAlignment="Top" Width="79"/>
     </Grid>
 </Window>

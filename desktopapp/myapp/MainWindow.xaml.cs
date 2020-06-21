@@ -19,13 +19,22 @@ using LiveCharts.Defaults;
 using LiveCharts.Wpf;
 using System.Globalization;
 
+using FireSharp.Config;
+using FireSharp.Interfaces;
+using FireSharp.Response;
+
 namespace myapp
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
+
     public partial class MainWindow : Window
     {
+        IFirebaseConfig config = new FirebaseConfig
+        {
+            AuthSecret = "Pd8KeC3RWz5pbhclB3PMtnK3I0J90udGgoRuNIJa",
+            BasePath = "https://ki-thuat-ghep-noi.firebaseio.com/"
+        };
+
+        IFirebaseClient client;
 
         SerialPort sp = new SerialPort();
         int temp;
@@ -33,6 +42,7 @@ namespace myapp
         int i_temp;
         int i_humidity;
         int light;
+        DateTime time; // curent time
 
         int temp_thres;
         int humidity_thres;
@@ -106,6 +116,13 @@ namespace myapp
                 sp.DataReceived += new SerialDataReceivedEventHandler(DataReceiveHandler);
                 sp.Open();
                 status.Text = "Connected";
+
+                client = new FireSharp.FirebaseClient(config);
+
+                if (client != null)
+                {
+                    firebase.Text = "Connected";
+                }
             }
             catch (Exception)
             {
@@ -137,6 +154,15 @@ namespace myapp
             sp.Write(str);
         }
 
+        private async void insertToFireBase(Data data)
+        {
+            SetResponse response = await client.SetTaskAsync(data.id + "/" + data.fb_time, data);
+            Data result = response.ResultAs<Data>();
+
+            Console.Write("Firebase inserted: ");
+            Console.WriteLine(result);
+        }
+
         /* Data format : 
          * [0 a a1 b b1 c] 
          * 0: success
@@ -148,50 +174,69 @@ namespace myapp
          */
         private void DataReceiveHandler(object sender, SerialDataReceivedEventArgs e)
         {
-            string indata = sp.ReadLine();
-            string[] s = indata.Split(' ');
-            if(s[0].Trim() == "0")
+            try
             {
-                temp = int.Parse(s[1]);
-                i_temp = int.Parse(s[2]);
-                humidity = int.Parse(s[3]);
-                i_humidity = int.Parse(s[4]);
-                light = int.Parse(s[5]);
-                this.Dispatcher.Invoke(() =>
+                string indata = sp.ReadLine();
+                string[] s = indata.Split(' ');
+                if (s[0].Trim() == "0")
                 {
-                    TempValues.Add(new ObservableValue(Math.Round(float.Parse(temp.ToString() + "." + i_temp.ToString()), 1)));
-                    HumiValues.Add(new ObservableValue(Math.Round(float.Parse(humidity.ToString() + "." + i_humidity.ToString()), 1)));
-                    LightValues.Add(new ObservableValue(Math.Round(light*100.0/1024, 2)));
-                    Labels.Append(DateTime.Now.ToString());
-                    nhiet_do.Text = temp.ToString() + "." + i_temp.ToString() + "°C";
-                    do_am.Text = humidity.ToString() + "." + i_humidity.ToString() + "%";
-                    anh_sang.Text = Math.Round(light * 100.0 / 1024, 2).ToString() + "%";
+                    temp = int.Parse(s[1]);
+                    i_temp = int.Parse(s[2]);
+                    humidity = int.Parse(s[3]);
+                    i_humidity = int.Parse(s[4]);
+                    light = int.Parse(s[5]);
+                    time = DateTime.Now;
 
-
-                    // write log
-                    using (System.IO.StreamWriter file =
-                    new System.IO.StreamWriter(@"log.txt", true))
+                    this.Dispatcher.Invoke(() =>
                     {
-                        file.WriteLine(DateTime.Now.ToString("dd/mm/yyyy h:mm:ss tt") + " - Temp: " + temp + "°C, Humidity: " + humidity + "%, Light: " + Math.Round(light * 100.0 / 1024, 2) + "%");   
-                    }
-                });
-            }
-            else if(s[0].Trim() == "1")
-            {
-                temp_thres = int.Parse(s[1]);
-                humidity_thres = int.Parse(s[2]);
-                light_thres = int.Parse(s[3]);
-                
-                this.Dispatcher.Invoke(() =>
+                        TempValues.Add(new ObservableValue(Math.Round(float.Parse(temp.ToString() + "." + i_temp.ToString()), 1)));
+                        HumiValues.Add(new ObservableValue(Math.Round(float.Parse(humidity.ToString() + "." + i_humidity.ToString()), 1)));
+                        LightValues.Add(new ObservableValue(Math.Round(light * 100.0 / 1024, 2)));
+                        Labels.Append(DateTime.Now.ToString());
+                        nhiet_do.Text = temp.ToString() + "." + i_temp.ToString() + "°C";
+                        do_am.Text = humidity.ToString() + "." + i_humidity.ToString() + "%";
+                        anh_sang.Text = Math.Round(light * 100.0 / 1024, 2).ToString() + "%";
+
+                        // insert to firebase
+                        var data = new Data
+                        {
+                            id = time.ToString("yyyy/MM/dd"),
+                            fb_time = time.ToString("h:mm:ss tt"),
+                            fb_temp = temp,
+                            fb_humi = humidity,
+                            fb_light = Math.Round(light * 100.0 / 1024, 2)
+                        };
+                        insertToFireBase(data);
+
+                        // write log
+                        using (System.IO.StreamWriter file =
+                        new System.IO.StreamWriter(@"log.txt", true))
+                        {
+                            file.WriteLine( time.ToString("yyyy/MM/dd h:mm:ss tt") + " - Temp: " + temp + "°C, Humidity: " + humidity + "%, Light: " + Math.Round(light * 100.0 / 1024, 2) + "%");
+                        }
+                    });
+                }
+                else if (s[0].Trim() == "1")
                 {
-                    ON.IsEnabled = true;
-                    nguong_nhiet_do.Text = temp_thres.ToString();
-                    nguong_do_am.Text = humidity_thres.ToString();
-                    nguong_anh_sang.Text = light_thres.ToString();
-                });
+                    temp_thres = int.Parse(s[1]);
+                    humidity_thres = int.Parse(s[2]);
+                    light_thres = int.Parse(s[3]);
+
+                    this.Dispatcher.Invoke(() =>
+                    {
+                        ON.IsEnabled = true;
+                        nguong_nhiet_do.Text = temp_thres.ToString();
+                        nguong_do_am.Text = humidity_thres.ToString();
+                        nguong_anh_sang.Text = light_thres.ToString();
+                    });
+                }
+                //Console.Write("Data:");
+                //Console.WriteLine(indata);
             }
-            Console.Write("Data:");
-            Console.WriteLine(indata);
+            catch (Exception)
+            {
+
+            };
         }
     }
 
