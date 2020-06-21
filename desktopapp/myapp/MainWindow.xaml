@@ -5,7 +5,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:myapp"
-        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf" 
+        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         x:Class="myapp.MainWindow"
         mc:Ignorable="d"
         Title="MainWindow" Height="610.334" Width="781.167">
@@ -34,13 +34,12 @@
         <TextBlock x:Name="nhiet_do_label" HorizontalAlignment="Left" Height="18" Margin="440,13,0,0" TextWrapping="Wrap" Text="Nhiệt độ" VerticalAlignment="Top" Width="49"/>
         <TextBlock x:Name="do_am_label" HorizontalAlignment="Left" Height="18" Margin="440,36,0,0" TextWrapping="Wrap" Text="Độ ẩm" VerticalAlignment="Top" Width="41"/>
         <TextBlock x:Name="anh_sang_label" HorizontalAlignment="Left" Height="18" Margin="440,59,0,0" TextWrapping="Wrap" Text="Ánh sáng" VerticalAlignment="Top" Width="59"/>
-
         <lvc:CartesianChart Series="{Binding SeriesCollection}" Margin="10,164,64,55" LegendLocation="Right" >
             <lvc:CartesianChart.AxisY>
                 <lvc:Axis ></lvc:Axis>
             </lvc:CartesianChart.AxisY>
             <lvc:CartesianChart.AxisX>
-                <lvc:Axis ></lvc:Axis>
+                <lvc:Axis MaxValue="130" LabelFormatter="{Binding XFormatter}"></lvc:Axis>
             </lvc:CartesianChart.AxisX>
         </lvc:CartesianChart>
         <Label Name="currentTime" HorizontalAlignment="Left" Height="58" Margin="619,13,0,0" VerticalAlignment="Top" Width="140" FontSize="24"/>

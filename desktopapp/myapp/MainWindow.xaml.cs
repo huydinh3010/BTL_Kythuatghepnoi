@@ -71,19 +71,26 @@ namespace myapp
                 {
                     Title = "Humidity",
                     LabelPoint = point => point.Y + "%",
-                    Values = HumiValues
+                    Values = HumiValues,
+                    PointGeometry = null
+
                 },
                 new LineSeries
                 {
                     Title = "Temperature",
                     LabelPoint = point => point.Y + "°C",
                     Values = TempValues,
+                    PointGeometry = null
+
+
                 },
                 new LineSeries
                 {
                     Title = "Light",
                     LabelPoint = point => point.Y + "%",
                     Values = LightValues,
+                    PointGeometry = null
+
                 }
             };
             ///
@@ -93,7 +100,7 @@ namespace myapp
         }
         public SeriesCollection SeriesCollection { get; set; }
         public string[] Labels { get; set; }
-        public Func<double, string> YFormatter { get; set; }
+        public Func<double, string> XFormatter { get; set; }
 
         void timer_Tick(object sender, EventArgs e)
         {
