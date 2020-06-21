@@ -4,9 +4,9 @@
         xmlns:ports="clr-namespace:System.IO.Ports;assembly=System"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:led_arduino"
+        xmlns:local="clr-namespace:myapp"
         xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf" 
-        x:Class="led_arduino.MainWindow"
+        x:Class="myapp.MainWindow"
         mc:Ignorable="d"
         Title="MainWindow" Height="610.334" Width="781.167">
     <Window.Resources>

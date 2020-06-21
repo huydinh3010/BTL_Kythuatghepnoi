@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{98E4F717-B179-46E0-AA72-0AE441E1B4EA}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>led_arduino</RootNamespace>
-    <AssemblyName>led_arduino</AssemblyName>
+    <RootNamespace>myapp</RootNamespace>
+    <AssemblyName>myapp</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -45,7 +45,7 @@
       <HintPath>..\packages\LiveCharts.Wpf.0.9.7\lib\net45\LiveCharts.Wpf.dll</HintPath>
     </Reference>
     <Reference Include="observable_point">
-      <HintPath>..\..\..\..\wpf\uc_observable_point\observable_point\observable_point\bin\Debug\observable_point.dll</HintPath>
+      <HintPath>..\..\..\..\Documents\ghep_noi_may_tinh\wpf\uc_observable_point\observable_point\observable_point\bin\Debug\observable_point.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />

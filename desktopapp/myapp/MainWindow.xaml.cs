@@ -19,7 +19,7 @@ using LiveCharts.Defaults;
 using LiveCharts.Wpf;
 using System.Globalization;
 
-namespace led_arduino
+namespace myapp
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -137,6 +137,15 @@ namespace led_arduino
             sp.Write(str);
         }
 
+        /* Data format : 
+         * [0 a a1 b b1 c] 
+         * 0: success
+         * a: int part of temp
+         * a1: after floating point part of temp
+         * b: int part of humi
+         * b1: after floating point part of humi
+         * c: light value (0-1023)
+         */
         private void DataReceiveHandler(object sender, SerialDataReceivedEventArgs e)
         {
             string indata = sp.ReadLine();
