@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.ComponentModel;
 using System.IO.Ports;
 using LiveCharts;
 using LiveCharts.Defaults;
@@ -26,7 +27,7 @@ using FireSharp.Response;
 namespace myapp
 {
 
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, INotifyPropertyChanged
     {
         IFirebaseConfig config = new FirebaseConfig
         {
@@ -51,6 +52,9 @@ namespace myapp
         ChartValues<ObservableValue> TempValues = new ChartValues<ObservableValue> {};
         ChartValues<ObservableValue> HumiValues = new ChartValues<ObservableValue> {};
         ChartValues<ObservableValue> LightValues = new ChartValues<ObservableValue> {};
+
+        private double _to;
+        private double _from;
 
         public MainWindow()
         {
@@ -94,10 +98,86 @@ namespace myapp
                 }
             };
             ///
+            From = 0;
+            To = 25;
 
             Labels = new[] { "" };
             DataContext = this;
         }
+
+        public double From
+        {
+            get { return _from; }
+            set
+            {
+                _from = value;
+                OnPropertyChanged("From");
+            }
+        }
+
+        public double To
+        {
+            get { return _to; }
+            set
+            {
+                _to = value;
+                OnPropertyChanged("To");
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged(string propertyName = null)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(propertyName));
+                Console.WriteLine("PROP CHANGED");
+            }
+        }
+
+        private void NextOnClick(object sender, RoutedEventArgs e)
+        {
+            Console.WriteLine("NEXT");
+            From += 25;
+            To += 25;
+        }
+
+        private void PrevOnClick(object sender, RoutedEventArgs e)
+        {
+            Console.WriteLine("PREV");
+            if (_from >= 25)
+            {
+                From -= 25;
+            }
+            else
+            {
+                From = 0;
+            }
+            To -= 25;
+        }
+
+        private void ZoomIn(object sender, RoutedEventArgs e)
+        {
+            Console.WriteLine("ZOOM");
+            From += 5;
+            To -= 5;
+        }
+        private void ZoomOut(object sender, RoutedEventArgs e)
+        {
+            Console.WriteLine("ZOOM");
+            if (_from >= 5)
+            {
+                From -= 5;
+            }
+            else
+            {
+                From = 0;
+            }
+            To += 5;
+        }
+
+
         public SeriesCollection SeriesCollection { get; set; }
         public string[] Labels { get; set; }
         public Func<double, string> XFormatter { get; set; }
@@ -213,7 +293,7 @@ namespace myapp
                             fb_humi = humidity,
                             fb_light = Math.Round(light * 100.0 / 1024, 2)
                         };
-                        insertToFireBase(data);
+                        //insertToFireBase(data);
 
                         // write log
                         using (System.IO.StreamWriter file =
